@@ -204,6 +204,13 @@ function usermap_test_zone_init()
 {
 	level flag::init( "always_on" );
 	level flag::set( "always_on" );
+
+	// Linear chain north: the debris door into zN sets enter_zN
+	zm_zonemgr::add_adjacent_zone( "start_zone", "z1", "enter_z1" );
+	for ( i = 2; i <= 9; i++ )
+	{
+		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
+	}
 }	
 
 function custom_add_weapons()

@@ -48,5 +48,15 @@ level thread endless_spawning();
 - Stock power sets `level flag "power_on"` (`_zm_power.gsc` `turn_power_on_and_open_doors`) and doesn't touch lights.
 - API docs: `docs_modtools/bo3_scriptapifunctions.htm`. Strip the tags with sed and grep it.
 
+## zm_parkour_nothing0 layout (design 4.md)
+- Linear chain north: start_zone (y -1920..880), then z1..z9, each exactly 1232 units long (z_k = y [880+(k-1)*1232, 880+k*1232]), with x ±~380. Zone volumes don't overlap; the previous zone keeps spawning via adjacency (`_zm_zonemgr.gsc` ~905-927 activates adjacent open zones).
+- The door into z_k is `debris{k-1}`: the trigger's `script_flag` is `enter_z{k}`, `zombie_cost` is 750*k, and it sits on a door octagon at (0, 720+(k-1)*1232) in the previous zone. The GSC `usermap_test_zone_init` loops `add_adjacent_zone( "z"+(i-1), "z"+i, "enter_z"+i )`.
+- Per zone (z1 offsets + (k-1)*1232): an entry `cool_float` at (0,976), `cool_float` grid (0,1248) (±256,1248) (±128,1472) (0,1696), `cool_float_spooky` at (-272,1696) and (256,1696), perk prefab at (336,1696) angles 0 270 0, 5 risers `z{k}_spawners`, info_volume `z{k}`, and a reflection probe clone.
+- Perks: z1 Stamin-Up, z2 QR, z3 Speed, z4 GobbleGum, z5 Double Tap, z6 Deadshot, z7 Mule Kick, z8 Jugg, z9 PaP. Even zones get `magic_box_location_{k/2}` at (-349.75,1696.25) angles 0 90 0 (z1 has `magic_box_start`). Odd zones get a wall gun: a plank worldspawn brush x[-352,-336] y[1664,1728] z[0,128], plus `skye_prefabs/t6_*_wallbuy.map` at (-334,1696) angles 0 270 0 (z3 MP5, z5 Rem870, z7 Galil, z9 HAMR).
+- Wall-buy prefab orientation: at angles 0 the wall must be 2 units on its -y side (Olympia at -574 with the plank at y -592..-576).
+- Worldspawn brush 10 is an invisible `clip_ai` floor zombies walk on (x ±384, y 32..11968). Extend it when adding area.
+- Prefab files: `map_source/_prefabs/caden/cool_float{,_dim,_spooky}.map`. All octagons are 160 wide, top z 0, bottom -16.
+- Map-edit workflow: Radiant closed → back up to `.map.pre_<thing>.bak` → test on a scratch copy → apply. Keep entity numbering sequential, generate uppercase uuid4 GUIDs, and use LF line endings. `tools/build_zones_once.py` is the generator used; it asserts and refuses to run twice.
+
 ## Style
 Tabs, Allman braces, `//` comments, spaces inside parens for calls.
