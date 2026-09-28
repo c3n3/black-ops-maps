@@ -3683,6 +3683,7 @@ material,mc/t7_wood_plywood_dirty
 material,mc/t7_wood_plywood_trim_dirty
 material,wc/mtl_t6_wpn_ar_galil_wall_chalk
 material,wc/mtl_t6_wpn_lmg_hamr_wall_chalk
+material,wc/mtl_t6_wpn_lmg_lsat_wall_chalk
 material,wc/mtl_t6_wpn_shotty_870mcs_wall_chalk
 material,wc/mtl_t6_wpn_shotty_olympia_wall_chalk
 material,wc/mtl_t6_wpn_smg_mp5_wall_chalk
@@ -4193,6 +4194,7 @@ image,i_t6_wpn_lmg_lsat_camo1_n
 image,i_t6_wpn_lmg_lsat_camo1_o
 image,i_t6_wpn_lmg_lsat_camo1_r
 image,i_t6_wpn_lmg_lsat_camo1_s
+image,i_t6_wpn_lmg_lsat_wall_chalk_c
 image,i_t6_wpn_lmg_m60_camo1_c
 image,i_t6_wpn_lmg_m60_camo1_g
 image,i_t6_wpn_lmg_m60_camo1_n
@@ -4891,6 +4893,7 @@ fx,blood/fx_blood_sword_trail_emitter_zod_zmb
 fx,blood/fx_blood_trail_zmb
 fx,electrical_spark
 fx,electrical_spark_burst
+fx,lighthouse_beam
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_flesh_impact_up
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_impact_up
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_tracer_up
@@ -4919,6 +4922,7 @@ animselectortable,zm_factory_zombie.ai_ast
 animmappingtable,zm_factory_zombie.ai_am
 animstatemachine,zm_zombie.ai_asm
 behaviortree,zm_zombie.ai_bt
+lightdescription,fx_light_headlight_generic1413278251
 lightdescription,gfx_dlight_gen_omni1033436870
 lightdescription,gfx_dlight_gen_omni_r25-72942508
 texturecombo,zm_parkour_nothing0

@@ -53,6 +53,8 @@
 
 #using scripts\zm\zm_usermap;
 
+#precache( "fx", "lighthouse_beam" );
+
 //*****************************************************************************
 // MAIN
 //*****************************************************************************
@@ -85,6 +87,80 @@ function main()
 	level thread endless_round_advance();
 
 	level thread power_light();
+
+	level thread lighthouse_switch();
+
+	level._effect["lighthouse_beam"] = "lighthouse_beam";
+	level thread lighthouse_beam();
+}
+
+// Spot light on the lighthouse lamp, sweeping a full circle every 20 seconds
+function lighthouse_beam()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	beam = Spawn( "script_model", ( 0, 24576, 620 ) );
+	beam SetModel( "tag_origin" );
+	beam.angles = ( 2, 270, 0 );	// facing the map (south), 2 degrees down
+	util::wait_network_frame();
+	PlayFXOnTag( level._effect["lighthouse_beam"], beam, "tag_origin" );
+
+	while ( 1 )
+	{
+		beam RotateYaw( 360, 20 );
+		beam waittill( "rotatedone" );
+	}
+}
+
+// Switch inside the lighthouse: pulling it sets off a nuke and starts the endgame, once per game
+function lighthouse_switch()
+{
+	trig = GetEnt( "lighthouse_switch", "targetname" );
+	if ( !isdefined( trig ) )
+	{
+		return;
+	}
+
+	handle = GetEnt( "lighthouse_switch_handle", "targetname" );
+
+	trig SetCursorHint( "HINT_NOICON" );
+	trig SetHintString( "Hold ^3[{+activate}]^7 to Start endgame" );
+	trig waittill( "trigger", player );
+	trig Delete();
+
+	// Same throw as the stock power switch handle
+	if ( isdefined( handle ) )
+	{
+		handle RotateRoll( -90, 0.3 );
+		handle waittill( "rotatedone" );
+	}
+
+	nuke_origin = SpawnStruct();
+	nuke_origin.origin = player.origin;
+	level thread zm_powerup_nuke::nuke_powerup( nuke_origin, player.team );
+
+	start_endgame( player );
+}
+
+// Endgame: 4x faster spawning and every zone spawns zombies
+function start_endgame( player )
+{
+	level.endgame_active = true;
+	level.zombie_vars["zombie_spawn_delay"] = [[level.func_get_zombie_spawn_delay]]( zm::get_round_number() );
+
+	// Open every remaining door for free (the force arg skips the cost), which also enables their zones
+	foreach ( trig in GetEntArray( "zombie_debris", "targetname" ) )
+	{
+		trig notify( "trigger", player, true );
+	}
+
+	// Every enabled zone counts as occupied, so all of them are active for spawning
+	level.zone_occupied_func = &endgame_zone_occupied;
+}
+
+function endgame_zone_occupied( zone_name )
+{
+	return true;
 }
 
 // Script lighting states are 0-based: script 0 = Radiant lighting state 1, script 1 = Radiant lighting state 2.
@@ -195,6 +271,11 @@ function endless_get_zombie_spawn_delay( n_round )
 			n_delay = 0.1;
 			break;
 		}
+	}
+
+	if ( IS_TRUE( level.endgame_active ) )
+	{
+		n_delay /= 4;
 	}
 
 	return n_delay;

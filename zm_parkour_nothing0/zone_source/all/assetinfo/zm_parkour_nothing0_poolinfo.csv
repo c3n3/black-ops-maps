@@ -5,10 +5,10 @@ destructibledef,128,0
 xanim,25000,2632
 xmodel,10240,350
 xmodelmesh,34816,676
-material,20480,698
+material,20480,699
 computeshaderset,256,0
 techset,1024,60
-image,49152,1249
+image,49152,1250
 sound,32,1
 sound_patch,16,0
 col_map,2,1
@@ -37,7 +37,7 @@ customizationtable,8,0
 customizationtable_feimages,8,0
 customizationtablecolor,1024,0
 snddriverglobals,1,0
-fx,1875,176
+fx,1875,177
 tagfx,64,0
 klf,64,2
 impactsfxtable,256,3
@@ -81,7 +81,7 @@ behaviortree,64,1
 behaviorstatemachine,128,0
 ttf,48,0
 sanim,1024,0
-lightdescription,500,10
+lightdescription,500,11
 shellshock,64,0
 xcam,512,0
 bgcache,32,1
