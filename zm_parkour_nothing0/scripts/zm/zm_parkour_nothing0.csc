@@ -5,6 +5,8 @@
 #using scripts\shared\exploder_shared;
 #using scripts\shared\scene_shared;
 #using scripts\shared\util_shared;
+#using scripts\shared\system_shared;
+#using scripts\shared\visionset_mgr_shared;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -35,6 +37,14 @@
 #using scripts\zm\_zm_trap_electric;
 
 #using scripts\zm\zm_usermap;
+
+// Safety-circle teleport: the Giant's teleporter overlay (server registers the same name)
+REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
+
+function safety_overlay_init()
+{
+	visionset_mgr::register_overlay_info_style_postfx_bundle( "zm_factory_teleport", VERSION_SHIP, 1, "pstfx_zm_der_teleport" );
+}
 
 function main()
 {

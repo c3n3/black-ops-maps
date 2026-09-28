@@ -20,6 +20,9 @@ fx,void_pole_light
 fx,fire/fx_fire_ground_rubble_sm_50x50
 fx,light/fx_light_fire_flicker_noshad_small
 
+// Safety-circle teleport (the Giant teleporter postfx)
+scriptbundle,pstfx_zm_der_teleport
+
 stringtable,gamedata/weapons/zm/zm_levelcommon_weapons.csv //This may be optional, check in your zone if this is present
 
 

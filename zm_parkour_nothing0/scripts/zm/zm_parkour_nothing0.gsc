@@ -10,6 +10,8 @@
 #using scripts\shared\math_shared;
 #using scripts\shared\scene_shared;
 #using scripts\shared\util_shared;
+#using scripts\shared\system_shared;
+#using scripts\shared\visionset_mgr_shared;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -59,6 +61,14 @@
 #precache( "fx", "fire/fx_fire_ground_rubble_sm_50x50" );
 #precache( "fx", "light/fx_light_fire_flicker_noshad_small" );
 
+// The safety-circle teleport uses the Giant's teleporter overlay; overlays must be registered during system init
+REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
+
+function safety_overlay_init()
+{
+	visionset_mgr::register_info( "overlay", "zm_factory_teleport", VERSION_SHIP, 61, 1, true );
+}
+
 //*****************************************************************************
 // MAIN
 //*****************************************************************************
@@ -104,6 +114,156 @@ function main()
 	level thread void_campfires();
 
 	level thread walkway_trap();
+
+	level flag::init( "lighthouse_reached" );
+	level thread safety_circles_init();
+	level thread lighthouse_reached_watch();
+	level thread safety_sign();
+	callback::on_spawned( &safety_player_think );
+}
+
+// Green circles under the paths: falling or downed players shoot one to teleport to safety
+function safety_circles_init()
+{
+	foreach ( disc in GetEntArray( "safety_circle", "targetname" ) )
+	{
+		disc NotSolid();
+	}
+
+	level.safety_circles = struct::get_array( "safety_circle_center", "targetname" );
+	level.safety_dests = [];
+	foreach ( dest in struct::get_array( "safety_dest", "targetname" ) )
+	{
+		level.safety_dests[dest.script_noteworthy] = dest;
+	}
+}
+
+// Before anyone reaches the lighthouse island, circles send players to spawn; after, to the lighthouse
+function lighthouse_reached_watch()
+{
+	while ( 1 )
+	{
+		foreach ( player in GetPlayers() )
+		{
+			if ( Distance2DSquared( player.origin, ( 0, 24576, 0 ) ) < 400 * 400 && player.origin[2] > -40 )
+			{
+				level flag::set( "lighthouse_reached" );
+				return;
+			}
+		}
+		wait 0.5;
+	}
+}
+
+function safety_sign()
+{
+	sign = struct::get( "safety_sign", "targetname" );
+	if ( !isdefined( sign ) )
+	{
+		return;
+	}
+
+	level flag::wait_till( "initial_blackscreen_passed" );
+	make_use_trigger( sign.origin, 72, 96, "shoot the green circles for 'safety'." );
+}
+
+function safety_player_think()
+{
+	self notify( "safety_player_think" );
+	self endon( "safety_player_think" );
+	self endon( "disconnect" );
+
+	self thread safety_bottom_watch();
+
+	while ( 1 )
+	{
+		self waittill( "weapon_fired" );
+		if ( IS_TRUE( self.safety_teleporting ) || !isdefined( level.safety_circles ) )
+		{
+			continue;
+		}
+
+		if ( isdefined( self safety_circle_aimed_at() ) )
+		{
+			self thread safety_teleport();
+		}
+	}
+}
+
+// Ray from the eye along the aim, against each circle's plane; only counts from below (the discs only draw underneath)
+function safety_circle_aimed_at()
+{
+	eye = self GetPlayerCameraPos();
+	dir = AnglesToForward( self GetPlayerAngles() );
+	if ( dir[2] <= 0.05 )
+	{
+		return undefined;
+	}
+
+	foreach ( circle in level.safety_circles )
+	{
+		if ( eye[2] >= circle.origin[2] )
+		{
+			continue;
+		}
+
+		hit = eye + dir * ( ( circle.origin[2] - eye[2] ) / dir[2] );
+		radius = Float( circle.radius );
+		if ( Distance2DSquared( hit, circle.origin ) <= radius * radius )
+		{
+			return circle;
+		}
+	}
+	return undefined;
+}
+
+// Hitting the bottom of the sky always downs the player, whatever their perks; they can still shoot a circle while downed
+function safety_bottom_watch()
+{
+	self endon( "safety_player_think" );
+	self endon( "disconnect" );
+
+	while ( 1 )
+	{
+		wait 0.1;
+		if ( self.origin[2] < -2500 && IsAlive( self ) && self.sessionstate == "playing" && !self laststand::player_is_in_laststand() )
+		{
+			self DoDamage( self.health + 1000, self.origin, undefined, undefined, "none", "MOD_UNKNOWN" );
+			wait 1;
+		}
+	}
+}
+
+// Same look as the Giant's teleporters; downed players stay downed
+function safety_teleport()
+{
+	self endon( "disconnect" );
+	self.safety_teleporting = true;
+
+	dest = level.safety_dests["spawn"];
+	if ( level flag::get( "lighthouse_reached" ) )
+	{
+		dest = level.safety_dests["lighthouse"];
+	}
+
+	// Hold them in the air while the effect plays
+	anchor = Spawn( "script_origin", self.origin );
+	self LinkTo( anchor );
+	self FreezeControls( true );
+	visionset_mgr::activate( "overlay", "zm_factory_teleport", self );
+
+	wait 1.5;
+
+	self Unlink();
+	anchor Delete();
+	self SetOrigin( dest.origin );
+	self SetPlayerAngles( dest.angles );
+	self SetVelocity( ( 0, 0, 0 ) );
+	visionset_mgr::deactivate( "overlay", "zm_factory_teleport", self );
+	self FreezeControls( false );
+	self ShellShock( "electrocution", 2 );
+
+	self.safety_teleporting = false;
 }
 
 // Walkway trap: 5000 sets the walkway on fire for 2 minutes (kills zombies, burns players), then a 1 minute cooldown

@@ -3379,6 +3379,36 @@ guid "{EA8EE348-BB3F-11F1-A6EB-C895CE7A0572}"
  ( 0 0 -16 ) ( 0 256 -16 ) ( -256 0 -16 ) clip_ai 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
  ( 0 0 0 ) ( 0 -256 0 ) ( -256 0 0 ) clip_ai 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
 }
+// brush 278
+{
+ guid "{3EE05399-EC60-4E33-BC1C-4F726F1B1AB5}"
+ ( 104 0 0 ) ( 104 -256 0 ) ( 104 0 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 200 0 0 ) ( 200 256 0 ) ( 200 0 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 0 ) ( 256 0 0 ) ( 0 0 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 8 0 ) ( -256 8 0 ) ( 0 8 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 40 ) ( 0 256 40 ) ( -256 0 40 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 120 ) ( 0 -256 120 ) ( -256 0 120 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+}
+// brush 279
+{
+ guid "{F19D99BE-D722-45BB-A2A0-0534248A61E2}"
+ ( 148 0 0 ) ( 148 -256 0 ) ( 148 0 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 156 0 0 ) ( 156 256 0 ) ( 156 0 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 2 0 ) ( 256 2 0 ) ( 0 2 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 6 0 ) ( -256 6 0 ) ( 0 6 -256 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 16 ) ( 0 256 16 ) ( -256 0 16 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 40 ) ( 0 -256 40 ) ( -256 0 40 ) t7_metal_worn_iron_dark 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+}
+// brush 280
+{
+ guid "{BB6EB9F0-EA8F-4441-8FAB-5719039DD327}"
+ ( 108 0 0 ) ( 108 -256 0 ) ( 108 0 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 196 0 0 ) ( 196 256 0 ) ( 196 0 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 -2 0 ) ( 256 -2 0 ) ( 0 -2 -256 ) t7_decal_blood_splatter_01 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 0 ) ( -256 0 0 ) ( 0 0 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 44 ) ( 0 256 44 ) ( -256 0 44 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 116 ) ( 0 -256 116 ) ( -256 0 116 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+}
 }
 // entity 1
 {
@@ -16444,5 +16474,621 @@ guid "{8AB017BC-0A5B-4104-B462-EC2827CD2621}"
 "origin" "0 23944 0"
 "targetname" "walkway_trap"
 "script_noteworthy" "23776 24112"
+"_color" "1 0 0"
+}
+// entity 988
+{
+guid "{EA454766-830B-48E6-82FD-D47CC955DAA8}"
+"classname" "script_brushmodel"
+"targetname" "safety_circle"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+// brush 0
+{
+ guid "{1F75197F-3284-4769-AB97-F74945A712C2}"
+ ( 250 -160 0 ) ( 250 96 0 ) ( 250 -160 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 230.9699 -64.3291 0 ) ( 133.0029 172.184 0 ) ( 230.9699 -64.3291 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 176.7767 16.7767 0 ) ( -4.2426 197.796 0 ) ( 176.7767 16.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 95.6709 70.9699 0 ) ( -140.8423 168.9368 0 ) ( 95.6709 70.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 90 0 ) ( -256 90 0 ) ( 0 90 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -95.6709 70.9699 0 ) ( -332.184 -26.9971 0 ) ( -95.6709 70.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -176.7767 16.7767 0 ) ( -357.796 -164.2426 0 ) ( -176.7767 16.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -230.9699 -64.3291 0 ) ( -328.9368 -300.8423 0 ) ( -230.9699 -64.3291 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -250 -160 0 ) ( -250 -416 0 ) ( -250 -160 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -230.9699 -255.6709 0 ) ( -133.0029 -492.184 0 ) ( -230.9699 -255.6709 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -176.7767 -336.7767 0 ) ( 4.2426 -517.796 0 ) ( -176.7767 -336.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -95.6709 -390.9699 0 ) ( 140.8423 -488.9368 0 ) ( -95.6709 -390.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 -410 0 ) ( 256 -410 0 ) ( 0 -410 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 95.6709 -390.9699 0 ) ( 332.184 -293.0029 0 ) ( 95.6709 -390.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 176.7767 -336.7767 0 ) ( 357.796 -155.7574 0 ) ( 176.7767 -336.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 230.9699 -255.6709 0 ) ( 328.9368 -19.1577 0 ) ( 230.9699 -255.6709 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 -212 ) ( 0 256 -212 ) ( -256 0 -212 ) t7_glass_green_opaque_01 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 -200 ) ( 0 -256 -200 ) ( -256 0 -200 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+}
+}
+// entity 989
+{
+guid "{642717D8-F781-4FA5-B681-113276775598}"
+"classname" "script_struct"
+"origin" "0 -160 -212"
+"targetname" "safety_circle_center"
+"script_noteworthy" "spawn"
+"radius" "250"
+"_color" "1 0 0"
+}
+// entity 990
+{
+guid "{156E06D6-D398-41C0-A51E-0E71EB5D9F6F}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "0 -160 -296"
+"radius" "420"
+"stops" "8"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 991
+{
+guid "{257F15AC-830F-4D9E-9C8C-A8294F3AEBCC}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "200 -160 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 992
+{
+guid "{504394ED-5ABD-47DC-A36D-37315DCBCBDF}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "100 13.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 993
+{
+guid "{A4651F6F-B11E-44FD-AFB2-4F61F9A25194}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-100 13.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 994
+{
+guid "{3470B72E-CD93-441E-97B5-63B3350AB329}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-200 -160 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 995
+{
+guid "{F661EAEE-D56A-4DB0-A7DC-0A4692FAB6B4}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-100 -333.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 996
+{
+guid "{C2000F41-787A-4A32-9C7B-577EBABB95CC}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "100 -333.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 997
+{
+guid "{3A2FC9D3-025C-4A87-A322-987922751407}"
+"classname" "script_brushmodel"
+"targetname" "safety_circle"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+// brush 0
+{
+ guid "{47FEDA7F-4BD1-4BC1-81BE-F540A0E00067}"
+ ( 250 12208 0 ) ( 250 12464 0 ) ( 250 12208 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 230.9699 12303.6709 0 ) ( 133.0029 12540.184 0 ) ( 230.9699 12303.6709 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 176.7767 12384.7767 0 ) ( -4.2426 12565.796 0 ) ( 176.7767 12384.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 95.6709 12438.9699 0 ) ( -140.8423 12536.9368 0 ) ( 95.6709 12438.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 12458 0 ) ( -256 12458 0 ) ( 0 12458 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -95.6709 12438.9699 0 ) ( -332.184 12341.0029 0 ) ( -95.6709 12438.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -176.7767 12384.7767 0 ) ( -357.796 12203.7574 0 ) ( -176.7767 12384.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -230.9699 12303.6709 0 ) ( -328.9368 12067.1577 0 ) ( -230.9699 12303.6709 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -250 12208 0 ) ( -250 11952 0 ) ( -250 12208 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -230.9699 12112.3291 0 ) ( -133.0029 11875.816 0 ) ( -230.9699 12112.3291 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -176.7767 12031.2233 0 ) ( 4.2426 11850.204 0 ) ( -176.7767 12031.2233 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -95.6709 11977.0301 0 ) ( 140.8423 11879.0632 0 ) ( -95.6709 11977.0301 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 11958 0 ) ( 256 11958 0 ) ( 0 11958 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 95.6709 11977.0301 0 ) ( 332.184 12074.9971 0 ) ( 95.6709 11977.0301 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 176.7767 12031.2233 0 ) ( 357.796 12212.2426 0 ) ( 176.7767 12031.2233 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 230.9699 12112.3291 0 ) ( 328.9368 12348.8423 0 ) ( 230.9699 12112.3291 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 -212 ) ( 0 256 -212 ) ( -256 0 -212 ) t7_glass_green_opaque_01 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 -200 ) ( 0 -256 -200 ) ( -256 0 -200 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+}
+}
+// entity 998
+{
+guid "{0CD701B5-98C2-4A5D-BA75-C56942AA6DD6}"
+"classname" "script_struct"
+"origin" "0 12208 -212"
+"targetname" "safety_circle_center"
+"script_noteworthy" "center"
+"radius" "250"
+"_color" "1 0 0"
+}
+// entity 999
+{
+guid "{E39D266F-B208-4993-BDC3-5AA99059FF9E}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "0 12208 -296"
+"radius" "420"
+"stops" "8"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1000
+{
+guid "{D40A0C65-271D-40A1-B7D1-F2D12BDC3B04}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "200 12208 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1001
+{
+guid "{986AF522-E103-42C0-99C2-329C319EE92E}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "100 12381.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1002
+{
+guid "{3CF60F28-C286-4CE8-9AC8-078658180B23}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-100 12381.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1003
+{
+guid "{EE8C62E7-B65E-4724-B8EE-CE77B4ED059D}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-200 12208 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1004
+{
+guid "{48DFFBD6-D359-4D0A-BCC9-774D41D6FCFC}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-100 12034.7949 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1005
+{
+guid "{2B9389AD-E903-4804-8202-5B0B0A78665B}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "100 12034.7949 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1006
+{
+guid "{E99A4530-82E2-4CD0-93BE-65CEFEC8D93B}"
+"classname" "script_brushmodel"
+"targetname" "safety_circle"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+// brush 0
+{
+ guid "{72F93467-32AD-41E4-82D4-7E2BDF39E98F}"
+ ( 250 24576 0 ) ( 250 24832 0 ) ( 250 24576 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 230.9699 24671.6709 0 ) ( 133.0029 24908.184 0 ) ( 230.9699 24671.6709 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 176.7767 24752.7767 0 ) ( -4.2426 24933.796 0 ) ( 176.7767 24752.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 95.6709 24806.9699 0 ) ( -140.8423 24904.9368 0 ) ( 95.6709 24806.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 24826 0 ) ( -256 24826 0 ) ( 0 24826 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -95.6709 24806.9699 0 ) ( -332.184 24709.0029 0 ) ( -95.6709 24806.9699 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -176.7767 24752.7767 0 ) ( -357.796 24571.7574 0 ) ( -176.7767 24752.7767 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -230.9699 24671.6709 0 ) ( -328.9368 24435.1577 0 ) ( -230.9699 24671.6709 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -250 24576 0 ) ( -250 24320 0 ) ( -250 24576 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -230.9699 24480.3291 0 ) ( -133.0029 24243.816 0 ) ( -230.9699 24480.3291 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -176.7767 24399.2233 0 ) ( 4.2426 24218.204 0 ) ( -176.7767 24399.2233 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( -95.6709 24345.0301 0 ) ( 140.8423 24247.0632 0 ) ( -95.6709 24345.0301 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 24326 0 ) ( 256 24326 0 ) ( 0 24326 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 95.6709 24345.0301 0 ) ( 332.184 24442.9971 0 ) ( 95.6709 24345.0301 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 176.7767 24399.2233 0 ) ( 357.796 24580.2426 0 ) ( 176.7767 24399.2233 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 230.9699 24480.3291 0 ) ( 328.9368 24716.8423 0 ) ( 230.9699 24480.3291 -256 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 -212 ) ( 0 256 -212 ) ( -256 0 -212 ) t7_glass_green_opaque_01 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+ ( 0 0 -200 ) ( 0 -256 -200 ) ( -256 0 -200 ) caulk 64 64 0 0 0 0 lightmap_gray 16384 16384 0 0 0 0
+}
+}
+// entity 1007
+{
+guid "{6D63638D-7873-4D78-9A37-E786858E7A2D}"
+"classname" "script_struct"
+"origin" "0 24576 -212"
+"targetname" "safety_circle_center"
+"script_noteworthy" "lighthouse"
+"radius" "250"
+"_color" "1 0 0"
+}
+// entity 1008
+{
+guid "{2B541A0A-3997-4654-9996-263E1359F03D}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "0 24576 -296"
+"radius" "420"
+"stops" "8"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1009
+{
+guid "{396AE9D9-9E51-43EB-8E03-B11B439E210D}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "200 24576 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1010
+{
+guid "{2CDFB762-6B78-4D77-BCEC-C035C096FCFE}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "100 24749.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1011
+{
+guid "{2275E628-9DAC-4B21-9650-00A4D449B552}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-100 24749.2051 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1012
+{
+guid "{6EE5E339-D982-4A0C-BCA0-19FDDB583401}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-200 24576 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1013
+{
+guid "{553FDDAB-92CF-4D62-BC5C-069511D09EB2}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "-100 24402.7949 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1014
+{
+guid "{E461B92A-08D7-4A6D-AD54-26CCE6AB41BC}"
+"classname" "light"
+"PRIMARY_TYPE" "PRIMARY_OMNI"
+"_color" "0.2 1 0.3"
+"origin" "100 24402.7949 -246"
+"radius" "160"
+"stops" "6"
+"ENABLE_FALLOFF" "1"
+"falloffdistance" "30"
+"PRIMARY_NOSHADOWMAP" "1"
+"client_server" "ClientSide"
+"excludeDedicated" "Off"
+"shadowUpdate" "Never"
+"name" "light"
+"fov_outer" "90"
+"lightingstate1" "1"
+"lightingstate2" "1"
+"lightingstate3" "1"
+"lightingstate4" "1"
+}
+// entity 1015
+{
+guid "{B8D876CE-C65E-46EB-91C6-F16059ECB978}"
+"classname" "script_struct"
+"origin" "0 -160 40"
+"targetname" "safety_dest"
+"script_noteworthy" "spawn"
+"angles" "0 90 0"
+"_color" "1 0 0"
+}
+// entity 1016
+{
+guid "{BE4E3355-BD6B-400A-9DE2-FAC293917902}"
+"classname" "script_struct"
+"origin" "0 24210 8"
+"targetname" "safety_dest"
+"script_noteworthy" "lighthouse"
+"angles" "0 90 0"
+"_color" "1 0 0"
+}
+// entity 1017
+{
+guid "{45BE4FD4-55F2-456C-8E1F-7A5CBCA00D1F}"
+"classname" "script_struct"
+"origin" "152 -24 16"
+"targetname" "safety_sign"
 "_color" "1 0 0"
 }
