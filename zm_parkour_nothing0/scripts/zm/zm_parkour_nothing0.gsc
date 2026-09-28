@@ -23,6 +23,7 @@
 #using scripts\zm\_zm_audio;
 #using scripts\zm\_zm_powerups;
 #using scripts\zm\_zm_score;
+#using scripts\zm\_zm_ai_dogs;
 #using scripts\shared\spawner_shared;
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_weapons;
@@ -484,6 +485,18 @@ function start_endgame( player )
 
 	// Every enabled zone counts as occupied, so all of them are active for spawning
 	level.zone_occupied_func = &endgame_zone_occupied;
+
+	level thread endgame_dogs();
+}
+
+// Endgame: the odd dog mixed into the horde, from the dog locations of every (now active) zone
+function endgame_dogs()
+{
+	while ( 1 )
+	{
+		wait RandomFloatRange( 10, 20 );
+		zm_ai_dogs::special_dog_spawn( 1 );
+	}
 }
 
 function endgame_zone_occupied( zone_name )
