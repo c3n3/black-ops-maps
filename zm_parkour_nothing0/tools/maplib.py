@@ -125,6 +125,19 @@ def _validate(planes):
         assert sum(1 for v in verts if abs(_dot(n, v) - dd) < 1e-2) >= 3, "unused plane"
 
 
+def solid(faces, mat):
+    """Convex brush from faces given as 3 points each (any winding); normals are turned toward the centroid."""
+    pts = [p for f in faces for p in f]
+    c = tuple(sum(p[i] for p in pts) / len(pts) for i in range(3))
+    planes = []
+    for a, b, e in faces:
+        n = _norm(_cross(_sub(b, a), _sub(e, a)))
+        if _dot(n, _sub(c, a)) < 0:
+            n = (-n[0], -n[1], -n[2])
+        planes.append((a, n))
+    return brush(planes, mat)
+
+
 def slab(z0, z1, top=None, bottom=None):
     return [((0, 0, z0), (0, 0, 1)) + ((bottom,) if bottom else ()), ((0, 0, z1), (0, 0, -1)) + ((top,) if top else ())]
 
@@ -230,12 +243,12 @@ def volume(name, x0, x1, y0, y1, z0=-520, z1=424):
                   [box(x0, x1, y0, y1, z0, z1, VOLUME)])
 
 
-def switch(x, y, handle_name):
+def switch(x, y, handle_name, z=0):
     """Stock power-switch models without the power trigger. At angles 0 the wall is on +y; player stands on -y.
     The trigger is spawned in script from the handle's position."""
     return [
-        model("p7_zm_der_pswitch_body", x, y + 2, -1),
+        model("p7_zm_der_pswitch_body", x, y + 2, z - 1),
         entity([("classname", "script_model"), ("angles", "0 0 90"), ("model", "p7_zm_der_pswitch_handle"),
-                ("origin", origin(x - 1, y - 7, 45)), ("targetname", handle_name), ("client_server", "ServerSide"),
+                ("origin", origin(x - 1, y - 7, z + 45)), ("targetname", handle_name), ("client_server", "ServerSide"),
                 ("modelscale", "1")] + [(f"lightingstate{i}", "1") for i in range(1, 5)]),
     ]

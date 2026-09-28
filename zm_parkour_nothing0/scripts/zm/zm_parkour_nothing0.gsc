@@ -24,6 +24,7 @@
 #using scripts\zm\_zm_powerups;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_ai_dogs;
+#using scripts\zm\_zm_perks;
 #using scripts\shared\spawner_shared;
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_weapons;
@@ -61,6 +62,7 @@
 #precache( "fx", "void_pole_light" );
 #precache( "fx", "fire/fx_fire_ground_rubble_sm_50x50" );
 #precache( "fx", "light/fx_light_fire_flicker_noshad_small" );
+#precache( "fx", "endgame_arrow_light" );
 
 // The safety-circle teleport uses the Giant's teleporter overlay; overlays must be registered during system init
 REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
@@ -118,6 +120,13 @@ function main()
 	level thread void_campfires();
 
 	level thread walkway_trap();
+
+	level thread godmode_switch();	// TESTING ONLY
+
+	level flag::init( "endgame_started" );
+	level._effect["endgame_arrow_light"] = "endgame_arrow_light";
+	level thread endgame_exit();
+	zm::register_player_damage_callback( &endgame_exit_no_fall_damage );
 
 	level flag::init( "lighthouse_reached" );
 	level thread safety_circles_init();
@@ -478,6 +487,13 @@ function lighthouse_switch()
 function start_endgame( player )
 {
 	level.endgame_active = true;
+	level flag::set( "endgame_started" );
+
+	// Everyone heads back to spawn for the exit
+	IPrintLnBold( "Now go back" );
+
+	// From now on, dead players respawn at the lighthouse (just outside its door)
+	level.check_valid_spawn_override = &endgame_respawn_at_lighthouse;
 	level.zombie_vars["zombie_spawn_delay"] = [[level.func_get_zombie_spawn_delay]]( zm::get_round_number() );
 
 	// Open every remaining door for free (the force arg skips the cost), which also enables their zones
@@ -500,6 +516,157 @@ function endgame_dogs()
 		wait RandomFloatRange( 10, 20 );
 		zm_ai_dogs::special_dog_spawn( 1 );
 	}
+}
+
+// Endgame exit: a green arrow off the spawn deck's west edge, a drop platform ~1000 below it and a $500 ending.
+// None of it exists until the endgame starts.
+function endgame_exit()
+{
+	arrow = GetEnt( "endgame_arrow", "targetname" );
+	platform = GetEnt( "endgame_platform", "targetname" );
+	models = GetEntArray( "endgame_ending_model", "targetname" );
+	ending = struct::get( "endgame_ending", "targetname" );
+	lamp = struct::get( "endgame_arrow_light", "targetname" );
+	if ( !isdefined( arrow ) || !isdefined( platform ) || !isdefined( ending ) )
+	{
+		return;
+	}
+
+	// Platform bounds for the no-fall-damage check: "x0 x1 y0 y1"
+	tokens = StrTok( ending.script_noteworthy, " " );
+	level.endgame_exit_bounds = array( Float( tokens[0] ), Float( tokens[1] ), Float( tokens[2] ), Float( tokens[3] ) );
+	level.endgame_exit_z = ending.origin[2];
+
+	foreach ( ent in array( arrow, platform ) )
+	{
+		ent Hide();
+		ent NotSolid();
+	}
+	foreach ( model in models )
+	{
+		model Hide();
+	}
+
+	level flag::wait_till( "endgame_started" );
+
+	foreach ( ent in array( arrow, platform ) )
+	{
+		ent Show();
+		ent Solid();
+	}
+	foreach ( model in models )
+	{
+		model Show();
+	}
+	if ( isdefined( lamp ) )
+	{
+		level thread play_loop_fx( "endgame_arrow_light", lamp.origin );
+	}
+
+	trig = make_use_trigger( ending.origin, 48, 96, "Hold ^3[{+activate}]^7 to end the game [Cost: 500]" );
+	while ( 1 )
+	{
+		trig waittill( "trigger", player );
+		if ( player.score < 500 )
+		{
+			player zm_audio::create_and_play_dialog( "general", "outofmoney" );
+			continue;
+		}
+
+		player zm_score::minus_to_player_score( 500 );
+		trig Delete();
+		foreach ( model in models )
+		{
+			if ( model.script_noteworthy === "handle" )
+			{
+				model RotateRoll( -90, 0.3 );
+			}
+		}
+		wait 0.5;
+		level notify( "end_game" );
+		return;
+	}
+}
+
+// TESTING ONLY: switch on the spawn deck. Whoever uses it gets god mode, 500k points, every perk in the map
+// and three Pack-a-Punched guns (Wunderwaffe, LSAT, SCAR-H). Reusable.
+function godmode_switch()
+{
+	handle = GetEnt( "godmode_switch_handle", "targetname" );
+	if ( !isdefined( handle ) )
+	{
+		return;
+	}
+
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	trig = make_use_trigger( handle.origin - ( 0, 24, 45 ), 40, 80, "Hold ^3[{+activate}]^7 for GOD MODE (testing)" );
+	while ( 1 )
+	{
+		trig waittill( "trigger", player );
+
+		handle RotateRoll( -90, 0.3 );
+		player thread godmode_give();
+		wait 1;
+		handle RotateRoll( 90, 0.3 );
+	}
+}
+
+function godmode_give()
+{
+	self endon( "disconnect" );
+
+	self EnableInvulnerability();
+	self zm_score::add_to_player_score( 500000 );
+
+	// Every perk registered in this map (Mule Kick first so the third gun fits)
+	perks = GetArrayKeys( level._custom_perks );
+	if ( !self HasPerk( "specialty_additionalprimaryweapon" ) && isdefined( level._custom_perks["specialty_additionalprimaryweapon"] ) )
+	{
+		self zm_perks::give_perk( "specialty_additionalprimaryweapon", false );
+	}
+	foreach ( perk in perks )
+	{
+		if ( !self HasPerk( perk ) )
+		{
+			self zm_perks::give_perk( perk, false );
+		}
+	}
+
+	// Swap the primaries for three Pack-a-Punched guns
+	foreach ( weapon in self GetWeaponsListPrimaries() )
+	{
+		self TakeWeapon( weapon );
+	}
+	foreach ( name in array( "t6_scarh_up", "t6_lsat_up", "tesla_gun_upgraded" ) )
+	{
+		weapon = GetWeapon( name );
+		self zm_weapons::weapon_give( weapon, true, false, true, true );
+		self GiveMaxAmmo( weapon );
+	}
+}
+
+// Respawn override: returns a spot with .origin/.angles (the safety circles' lighthouse destination)
+function endgame_respawn_at_lighthouse( player )
+{
+	return level.safety_dests["lighthouse"];
+}
+
+// Landing on the exit platform never hurts, whatever the height
+function endgame_exit_no_fall_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime )
+{
+	if ( sMeansOfDeath !== "MOD_FALLING" || !level flag::get( "endgame_started" ) || !isdefined( level.endgame_exit_bounds ) )
+	{
+		return -1;
+	}
+
+	b = level.endgame_exit_bounds;
+	o = self.origin;
+	if ( o[0] >= b[0] && o[0] <= b[1] && o[1] >= b[2] && o[1] <= b[3] && Abs( o[2] - level.endgame_exit_z ) < 64 )
+	{
+		return 0;
+	}
+	return -1;
 }
 
 function endgame_zone_occupied( zone_name )
