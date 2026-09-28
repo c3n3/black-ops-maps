@@ -16,6 +16,9 @@ scriptparsetree,scripts/zm/zm_parkour_nothing0.csc
 
 // FX used only from script
 fx,lighthouse_beam
+fx,void_pole_light
+fx,fire/fx_fire_ground_rubble_sm_50x50
+fx,light/fx_light_fire_flicker_noshad_small
 
 stringtable,gamedata/weapons/zm/zm_levelcommon_weapons.csv //This may be optional, check in your zone if this is present
 

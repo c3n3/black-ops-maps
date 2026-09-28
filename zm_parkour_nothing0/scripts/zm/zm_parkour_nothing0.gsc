@@ -54,6 +54,9 @@
 #using scripts\zm\zm_usermap;
 
 #precache( "fx", "lighthouse_beam" );
+#precache( "fx", "void_pole_light" );
+#precache( "fx", "fire/fx_fire_ground_rubble_sm_50x50" );
+#precache( "fx", "light/fx_light_fire_flicker_noshad_small" );
 
 //*****************************************************************************
 // MAIN
@@ -92,6 +95,94 @@ function main()
 
 	level._effect["lighthouse_beam"] = "lighthouse_beam";
 	level thread lighthouse_beam();
+
+	level._effect["void_pole_light"] = "void_pole_light";
+	level._effect["void_campfire"] = "fire/fx_fire_ground_rubble_sm_50x50";
+	level._effect["void_campfire_light"] = "light/fx_light_fire_flicker_noshad_small";
+	level thread void_pole();
+	level thread void_campfires();
+}
+
+// Spawns a use trigger players can see, with a raw hint string
+function make_use_trigger( origin, radius, height, hint )
+{
+	trig = Spawn( "trigger_radius_use", origin, 0, radius, height );
+	trig TriggerIgnoreTeam();
+	trig SetVisibleToAll();
+	trig SetCursorHint( "HINT_NOICON" );
+	trig SetHintString( hint );
+	return trig;
+}
+
+// Plays a looping fx on a tag_origin at origin; returns the model so it can be cleaned up
+function play_loop_fx( fx_name, origin )
+{
+	fx_model = Spawn( "script_model", origin );
+	fx_model SetModel( "tag_origin" );
+	util::wait_network_frame();
+	PlayFXOnTag( level._effect[fx_name], fx_model, "tag_origin" );
+	return fx_model;
+}
+
+// The Void's centre pole: dark until its switch is pulled, then a faulty flickering light forever
+function void_pole()
+{
+	handle = GetEnt( "void_pole_switch_handle", "targetname" );
+	lamp = struct::get( "void_pole_light", "targetname" );
+	if ( !isdefined( handle ) || !isdefined( lamp ) )
+	{
+		return;
+	}
+
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	trig = make_use_trigger( handle.origin - ( 0, 24, 45 ), 40, 80, "Hold ^3[{+activate}]^7 to turn on the light" );
+	trig waittill( "trigger" );
+	trig Delete();
+
+	handle RotateRoll( -90, 0.3 );
+	handle waittill( "rotatedone" );
+
+	play_loop_fx( "void_pole_light", lamp.origin );
+}
+
+// Campfires on the Void platforms: free to light, stay lit, burn anyone standing in them
+function void_campfires()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	foreach ( fire in struct::get_array( "void_campfire", "targetname" ) )
+	{
+		fire thread void_campfire_think();
+	}
+}
+
+function void_campfire_think()
+{
+	trig = make_use_trigger( self.origin, 48, 64, "Hold ^3[{+activate}]^7 to light the fire" );
+	trig waittill( "trigger" );
+	trig Delete();
+
+	play_loop_fx( "void_campfire", self.origin );
+	play_loop_fx( "void_campfire_light", self.origin + ( 0, 0, 24 ) );
+
+	while ( 1 )
+	{
+		foreach ( player in GetPlayers() )
+		{
+			if ( !IsAlive( player ) || player laststand::player_is_in_laststand() )
+			{
+				continue;
+			}
+
+			// Standing in the fire: within the stone ring, on the platform
+			if ( Distance2DSquared( player.origin, self.origin ) < 32 * 32 && Abs( player.origin[2] - self.origin[2] ) < 40 )
+			{
+				player DoDamage( 10, self.origin );
+			}
+		}
+		wait 0.5;
+	}
 }
 
 // Spot light on the lighthouse lamp, sweeping a full circle every 20 seconds
@@ -288,7 +379,7 @@ function usermap_test_zone_init()
 
 	// Linear chain north: the debris door into zN sets enter_zN
 	zm_zonemgr::add_adjacent_zone( "start_zone", "z1", "enter_z1" );
-	for ( i = 2; i <= 9; i++ )
+	for ( i = 2; i <= 10; i++ )
 	{
 		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
 	}
