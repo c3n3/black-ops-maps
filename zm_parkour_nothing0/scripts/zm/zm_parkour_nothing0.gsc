@@ -20,6 +20,7 @@
 #using scripts\zm\_zm;
 #using scripts\zm\_zm_audio;
 #using scripts\zm\_zm_powerups;
+#using scripts\zm\_zm_score;
 #using scripts\shared\spawner_shared;
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_weapons;
@@ -101,6 +102,82 @@ function main()
 	level._effect["void_campfire_light"] = "light/fx_light_fire_flicker_noshad_small";
 	level thread void_pole();
 	level thread void_campfires();
+
+	level thread walkway_trap();
+}
+
+// Walkway trap: 5000 sets the walkway on fire for 2 minutes (kills zombies, burns players), then a 1 minute cooldown
+function walkway_trap()
+{
+	handle = GetEnt( "walkway_trap_handle", "targetname" );
+	area = struct::get( "walkway_trap", "targetname" );
+	if ( !isdefined( handle ) || !isdefined( area ) )
+	{
+		return;
+	}
+
+	tokens = StrTok( area.script_noteworthy, " " );
+	y0 = Float( tokens[0] );
+	y1 = Float( tokens[1] );
+
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	trig = make_use_trigger( handle.origin - ( 0, 24, 45 ), 40, 80, "" );
+	while ( 1 )
+	{
+		trig SetHintString( "Hold ^3[{+activate}]^7 to set the walkway on fire [Cost: 5000]" );
+		trig waittill( "trigger", player );
+		if ( player.score < 5000 )
+		{
+			player zm_audio::create_and_play_dialog( "general", "outofmoney" );
+			continue;
+		}
+		player zm_score::minus_to_player_score( 5000 );
+
+		trig SetHintString( "The walkway is on fire" );
+		handle RotateRoll( -90, 0.3 );
+
+		fires = [];
+		for ( y = y0; y <= y1; y += 42 )
+		{
+			fires[fires.size] = play_loop_fx( "void_campfire", ( 0, y, 0 ) );
+		}
+
+		end_time = GetTime() + 120000;
+		while ( GetTime() < end_time )
+		{
+			foreach ( zombie in GetAITeamArray( level.zombie_team ) )
+			{
+				if ( IsAlive( zombie ) && on_walkway( zombie.origin, y0, y1 ) )
+				{
+					zombie DoDamage( zombie.health + 666, zombie.origin );
+				}
+			}
+
+			foreach ( player in GetPlayers() )
+			{
+				if ( IsAlive( player ) && !player laststand::player_is_in_laststand() && on_walkway( player.origin, y0, y1 ) )
+				{
+					player DoDamage( 10, player.origin );
+				}
+			}
+			wait 0.5;
+		}
+
+		foreach ( fire in fires )
+		{
+			fire Delete();
+		}
+
+		trig SetHintString( "The trap is cooling down" );
+		handle RotateRoll( 90, 0.3 );
+		wait 60;
+	}
+}
+
+function on_walkway( origin, y0, y1 )
+{
+	return Abs( origin[0] ) < 40 && origin[1] >= y0 - 16 && origin[1] <= y1 + 16 && origin[2] > -40 && origin[2] < 120;
 }
 
 // Spawns a use trigger players can see, with a raw hint string
@@ -379,10 +456,13 @@ function usermap_test_zone_init()
 
 	// Linear chain north: the debris door into zN sets enter_zN
 	zm_zonemgr::add_adjacent_zone( "start_zone", "z1", "enter_z1" );
-	for ( i = 2; i <= 10; i++ )
+	for ( i = 2; i <= 16; i++ )
 	{
 		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
 	}
+
+	// Approach, walkway and island: no door of its own, it opens with z16
+	zm_zonemgr::add_adjacent_zone( "z16", "lighthouse", "enter_z16" );
 }	
 
 function custom_add_weapons()
