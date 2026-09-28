@@ -23,7 +23,7 @@ fx,light/fx_light_fire_flicker_noshad_small
 // Safety-circle teleport (the Giant teleporter postfx)
 scriptbundle,pstfx_zm_der_teleport
 
-stringtable,gamedata/weapons/zm/zm_levelcommon_weapons.csv //This may be optional, check in your zone if this is present
+stringtable,gamedata/weapons/zm/zm_parkour_nothing0_weapons.csv // this map's box: only the Wunderwaffe, unlimited
 
 
 weapon,t6_ak47

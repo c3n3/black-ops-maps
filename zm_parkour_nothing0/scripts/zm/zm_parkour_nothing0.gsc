@@ -88,6 +88,9 @@ function main()
 
 	level.dog_rounds_allowed = false;
 
+	// No perk limit (stock is 4); _zm_perks sets it during system init, so this overrides it
+	level.perk_purchase_limit = 99;
+
 	level.pathdist_type = PATHDIST_ORIGINAL;
 
 	zombie_utility::set_zombie_var( "zombie_spawn_delay", 2.0, true );
@@ -640,6 +643,6 @@ function usermap_test_zone_init()
 
 function custom_add_weapons()
 {
-	zm_weapons::load_weapon_spec_from_table("gamedata/weapons/zm/zm_levelcommon_weapons.csv", 1);
+	zm_weapons::load_weapon_spec_from_table("gamedata/weapons/zm/zm_parkour_nothing0_weapons.csv", 1);
 }
 

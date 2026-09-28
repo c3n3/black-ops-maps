@@ -57,5 +57,5 @@ function main()
 
 function include_weapons()
 {
-	zm_weapons::load_weapon_spec_from_table("gamedata/weapons/zm/zm_levelcommon_weapons.csv", 1);
+	zm_weapons::load_weapon_spec_from_table("gamedata/weapons/zm/zm_parkour_nothing0_weapons.csv", 1);
 }
