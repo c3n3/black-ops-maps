@@ -20,17 +20,26 @@
 // 500 points. -1 gun slot. The next perk gained after it (by any means) is bound to it: Mule Lick and that perk
 // are never lost to downs or deaths for the rest of the game. One binding per player, irreversible.
 // Mule Kick + Mule Lick = the normal 2 guns.
-// It borrows the unused engine perk "specialty_tombstone"; the machine and bottle are Mule Kick's.
+// Design 11: a full custom perk (CYO template layout). Machine: DEVRAW Dew's model re-textured dark red with a
+// "MULE LICK" sign; bottle: BO4 bottle with the Mule Lick label; HUD icon via hud_t7.lua (mule_lick).
+// It borrows the engine perk "specialty_whoswho" (the community perk collection's Tombstone Soda uses
+// specialty_tombstone, so Mule Lick can't).
 
-#define PERK_MULE_LICK						"specialty_tombstone"
+#define PERK_MULE_LICK						"specialty_whoswho"
 #define MULE_LICK_COST						500
-#define MULE_LICK_BOTTLE_WEAPON				"zombie_perk_bottle_additionalprimaryweapon"
-#define MULE_LICK_MACHINE_MODEL				"p7_zm_vending_three_gun"
+#define MULE_LICK_ALIAS						"mule_lick"						// hud_t7.lua perk list key
+#define MULE_LICK_CLIENTFIELD				"hudItems.perks.mule_lick"
+#define MULE_LICK_BOTTLE_WEAPON				"zombie_perk_bottle_mulelick"
+#define MULE_LICK_MACHINE_OFF_MODEL			"mulelick_machine_off"
+#define MULE_LICK_MACHINE_ON_MODEL			"mulelick_machine_on"
 #define MULE_LICK_RADIANT_MACHINE_NAME		"vending_mulelick"
-#define MULE_LICK_MACHINE_LIGHT_FX			"jugger_light"		// Juggernog's red machine light
-#define MULE_LICK_ICON						"mule_lick_icon"
+#define MULE_LICK_MACHINE_LIGHT_FX			"mulelick_light"
+#define MULE_LICK_FX_FILE					"zm_parkour_nothing0/mulelick"
+#define MULE_LICK_JINGLE					"mus_perks_mulelick_jingle"
+#define MULE_LICK_STING						"mus_perks_mulelick_sting"
 
-#precache( "material", MULE_LICK_ICON );
+#precache( "string", "MULELICK_PERK_MULE_LICK_STRING" );
+#precache( "fx", MULE_LICK_FX_FILE );
 
 #namespace zm_perk_mule_lick;
 
@@ -38,7 +47,7 @@ REGISTER_SYSTEM( "zm_perk_mule_lick", &__init__, undefined )
 
 function __init__()
 {
-	zm_perks::register_perk_basic_info( PERK_MULE_LICK, "mulelick", MULE_LICK_COST, "Hold ^3[{+activate}]^7 for Mule Lick [Cost: 500]", GetWeapon( MULE_LICK_BOTTLE_WEAPON ) );
+	zm_perks::register_perk_basic_info( PERK_MULE_LICK, "mulelick", MULE_LICK_COST, &"MULELICK_PERK_MULE_LICK_STRING", GetWeapon( MULE_LICK_BOTTLE_WEAPON ) );
 	zm_perks::register_perk_precache_func( PERK_MULE_LICK, &mule_lick_precache );
 	zm_perks::register_perk_clientfields( PERK_MULE_LICK, &mule_lick_register_clientfield, &mule_lick_set_clientfield );
 	zm_perks::register_perk_machine( PERK_MULE_LICK, &mule_lick_machine_setup );
@@ -53,24 +62,27 @@ function mule_lick_precache()
 {
 	level.machine_assets[PERK_MULE_LICK] = SpawnStruct();
 	level.machine_assets[PERK_MULE_LICK].weapon = GetWeapon( MULE_LICK_BOTTLE_WEAPON );
-	level.machine_assets[PERK_MULE_LICK].off_model = MULE_LICK_MACHINE_MODEL;
-	level.machine_assets[PERK_MULE_LICK].on_model = MULE_LICK_MACHINE_MODEL;
+	level.machine_assets[PERK_MULE_LICK].off_model = MULE_LICK_MACHINE_OFF_MODEL;
+	level.machine_assets[PERK_MULE_LICK].on_model = MULE_LICK_MACHINE_ON_MODEL;
+	level._effect[MULE_LICK_MACHINE_LIGHT_FX] = MULE_LICK_FX_FILE;
 }
 
-// The stock perk bar only knows the stock perks, so Mule Lick draws its own icon instead (mule_lick_hud)
+// HUD perk icon: hud_t7.lua maps "mule_lick" to perk_shader_mulelick
 function mule_lick_register_clientfield()
 {
+	clientfield::register( "clientuimodel", MULE_LICK_CLIENTFIELD, VERSION_SHIP, 2, "int" );
 }
 
 function mule_lick_set_clientfield( state )
 {
+	self clientfield::set_player_uimodel( MULE_LICK_CLIENTFIELD, state );
 }
 
 function mule_lick_machine_setup( use_trigger, perk_machine, bump_trigger, collision )
 {
-	use_trigger.script_sound = "mus_perks_mulekick_jingle";
+	use_trigger.script_sound = MULE_LICK_JINGLE;
 	use_trigger.script_string = "tap_perk";
-	use_trigger.script_label = "mus_perks_mulekick_sting";
+	use_trigger.script_label = MULE_LICK_STING;
 	use_trigger.target = MULE_LICK_RADIANT_MACHINE_NAME;
 	perk_machine.script_string = "tap_perk";
 	perk_machine.targetname = MULE_LICK_RADIANT_MACHINE_NAME;
@@ -104,7 +116,6 @@ function give_mule_lick()
 	self._retain_perks_array[PERK_MULE_LICK] = true;
 
 	self drop_extra_guns();
-	self thread mule_lick_hud();
 
 	if ( !IS_TRUE( self.mule_lick_owned ) )
 	{
@@ -179,25 +190,4 @@ function mule_lick_restore_on_spawn()
 			self zm_perks::give_perk( perk, false );
 		}
 	}
-}
-
-// Red Mule Lick icon, bottom left above the stock perk row
-function mule_lick_hud()
-{
-	if ( isdefined( self.mule_lick_icon ) )
-	{
-		return;
-	}
-
-	icon = NewClientHudElem( self );
-	icon.alignX = "left";
-	icon.alignY = "bottom";
-	icon.horzAlign = "left";
-	icon.vertAlign = "bottom";
-	icon.x = 8;
-	icon.y = -150;
-	icon.foreground = true;
-	icon.hidewheninmenu = true;
-	icon SetShader( MULE_LICK_ICON, 32, 32 );
-	self.mule_lick_icon = icon;
 }

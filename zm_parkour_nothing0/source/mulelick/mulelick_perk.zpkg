@@ -1,0 +1,12 @@
+// LOCALIZED STRINGS
+localize,mulelick_perk
+
+// MULE LICK PERK
+scriptparsetree,scripts/zm/_zm_perk_mule_lick.gsc
+scriptparsetree,scripts/zm/_zm_perk_mule_lick.csc
+
+image,perk_shader_mulelick				// HUD perk icon
+fx,zm_parkour_nothing0/mulelick			// machine glow
+xmodel,mulelick_machine_on				// machine, power on
+xmodel,mulelick_machine_off				// machine, power off
+weapon,zombie_perk_bottle_mulelick		// perk bottle

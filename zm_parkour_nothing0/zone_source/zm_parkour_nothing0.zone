@@ -9,6 +9,9 @@ include,community_perk_collection
 
 include,hud_t7
 
+// Mule Lick perk (share/zone_source/mulelick_perk.zpkg: scripts, string, machine, bottle, HUD icon, fx)
+include,mulelick_perk
+
 xmodel,skybox_default_day
 material,luts_t7_default
 	
@@ -21,11 +24,6 @@ sound,zm_parkour_nothing0
 
 scriptparsetree,scripts/zm/zm_parkour_nothing0.gsc
 scriptparsetree,scripts/zm/zm_parkour_nothing0.csc
-scriptparsetree,scripts/zm/_zm_perk_mule_lick.gsc
-scriptparsetree,scripts/zm/_zm_perk_mule_lick.csc
-
-// Mule Lick HUD icon (source_data/zm_parkour_nothing0.gdt)
-material,mule_lick_icon
 
 // FX used only from script
 fx,lighthouse_beam

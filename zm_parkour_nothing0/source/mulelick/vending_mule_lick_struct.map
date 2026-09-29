@@ -1,0 +1,81 @@
+iwmap 4
+"script_startingnumber" 0
+"000_Global" flags  active
+"The Map" flags expanded 
+// entity 0
+{
+guid "{0384D3F8-4F7E-11ED-AC55-7C10C945A117}"
+"classname" "worldspawn"
+"evmax" "31"
+"evmin" "-32"
+"lutmaterial" "luts_t7_default"
+"secondsLerpToDarker" "1"
+"secondsLerpToLighter" "1"
+"fsi" "default"
+"gravity" "800"
+"lightingquality" "1024"
+"lodbias" "default"
+"numOmniShadowSlices" "24"
+"numSpotShadowSlices" "64"
+"samplescale" "1"
+"shadowslices" "96"
+"sky_intensity_factor0" "1"
+"sky_intensity_factor1" "1"
+"skyboxmodel" "skybox_default_day"
+"ssi" "default_day"
+"state_alias_1" "State 1"
+"state_alias_2" "State 2"
+"state_alias_3" "State 3"
+"state_alias_4" "State 4"
+"umbraSmallestHole" "16"
+"umbraSmallestOccluder" "96"
+"umbraTileSize" "2"
+"umbra_prime_depth" "1"
+"vbloom" "none"
+"vcolor" "none"
+"wsi" "default_day"
+}
+// entity 1
+{
+guid "{0384D3F9-4F7E-11ED-AC55-7C10C945A117}"
+"classname" "script_struct"
+"angles" "0 90 0"
+"origin" "-30 -38 0"
+"script_int" "1"
+"script_noteworthy" "attack_spot"
+"targetname" "auto1"
+"_color" "1 0 0"
+}
+// entity 2
+{
+guid "{0384D3FA-4F7E-11ED-AC55-7C10C945A117}"
+"classname" "script_struct"
+"angles" "0 90 0"
+"origin" "0 -46 0"
+"script_int" "2"
+"script_noteworthy" "attack_spot"
+"targetname" "auto1"
+"_color" "1 0 0"
+}
+// entity 3
+{
+guid "{0384D3FB-4F7E-11ED-AC55-7C10C945A117}"
+"classname" "script_struct"
+"angles" "0 90 0"
+"origin" "30 -38 0"
+"script_int" "3"
+"script_noteworthy" "attack_spot"
+"targetname" "auto1"
+"_color" "1 0 0"
+}
+// entity 4
+{
+guid "{0384D3FC-4F7E-11ED-AC55-7C10C945A117}"
+"classname" "script_struct"
+"angles" "0 270 0"
+"model" "mulelick_machine_on"
+"script_noteworthy" "specialty_whoswho"
+"target" "auto1"
+"targetname" "zm_perk_machine"
+"_color" "1 0 0"
+}

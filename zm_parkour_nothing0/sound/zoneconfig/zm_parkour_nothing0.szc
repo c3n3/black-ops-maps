@@ -21,6 +21,12 @@
 },
 {
 	"Type" : "ALIAS",
+	"Name" : "mulelick_perk_sounds",
+	"Filename" : "mulelick_perk_sounds.csv",
+	"Specs" : [ ] 
+},
+{
+	"Type" : "ALIAS",
 	"Name" : "community_perk_collection",
 	"Filename" : "west/community_perk_collection.csv",
 	"Specs" : [ ] 

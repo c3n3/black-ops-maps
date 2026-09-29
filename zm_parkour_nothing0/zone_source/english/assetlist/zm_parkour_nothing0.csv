@@ -59,4 +59,5 @@ image,i_c_zom_der_zombie_mp40pouch_g
 image,i_c_zom_der_zombie_mp40pouch_n
 image,i_c_zom_der_zombie_mp40pouch_s
 sound,zm_parkour_nothing0
+localize,mulelick_perk
 keyvaluepairs,zm_parkour_nothing0

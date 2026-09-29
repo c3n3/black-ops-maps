@@ -4,7 +4,7 @@ zm_parkour_nothing0 - playtest build (not published; please don't share it on)
 You need
 --------
 - Call of Duty: Black Ops III on PC (Steam). The base game is enough: everything the map uses is inside these files.
-- About 3 GB of free disk space.
+- About 14 GB of free disk space while installing (the zip is ~6.5 GB; the installed map is ~6.5 GB, and you can delete the zip afterwards).
 
 Install
 -------
@@ -27,6 +27,7 @@ How the map starts
 - Round 1 does NOT start until someone clears the line of barrels at the north edge of the spawn deck (it's free).
 - There's a lever at spawn marked "GOD MODE (testing)" - it's a test tool for this playtest.
 - If you fall, shoot one of the green circles under the paths (from below) to get teleported back.
+- The red machine at spawn is Mule Lick, a custom perk ($500): you lose a gun slot, but the next perk you get is never lost, even if you go down.
 
 Uninstall
 ---------

@@ -164,6 +164,7 @@ function main()
 	level thread dogs_match_zombie_health();
 	level thread void_door_dogs();
 	level thread perk_bottles();
+	level thread wunderfizz_map_perks_only();	// Wunderfizz only offers perks with a machine in the map
 	if ( isdefined( level.zombie_powerups["fire_sale"] ) )
 	{
 		level.zombie_powerups["fire_sale"].func_should_drop_with_regular_powerups = &fire_sale_can_drop;
@@ -182,6 +183,8 @@ function main()
 	level flag::init( "endgame_started" );
 	level._effect["endgame_arrow_light"] = "endgame_arrow_light";
 	level thread endgame_exit();
+	level thread endgame_path();		// glowing red path lighthouse -> spawn, endgame only
+	level thread endgame_zombie_recall();	// endgame: zombies left behind every player come back at spawn
 	zm::register_player_damage_callback( &endgame_exit_no_fall_damage );
 
 	level flag::init( "lighthouse_reached" );
@@ -682,6 +685,25 @@ function void_door_dogs()
 	spawn_dogs_now( 10, array( "z10" ) );
 }
 
+// Endgame path: a glowing red see-through strip along the centre line from the spawn deck to the lighthouse
+// doorway, bridging every gap. Players only; it doesn't exist until the endgame starts.
+function endgame_path()
+{
+	path = GetEnt( "endgame_path", "targetname" );
+	if ( !isdefined( path ) )
+	{
+		return;
+	}
+
+	path Hide();
+	path NotSolid();
+
+	level flag::wait_till( "endgame_started" );
+
+	path Show();
+	path Solid();
+}
+
 // Endgame exit: a green arrow off the spawn deck's west edge, a drop platform ~1000 below it and a $500 ending.
 // None of it exists until the endgame starts.
 function endgame_exit()
@@ -792,7 +814,7 @@ function ambient_light_switch()
 	}
 }
 
-// TESTING ONLY: switch on the spawn deck. Whoever uses it gets god mode, 500k points, every perk in the map
+// TESTING ONLY: switch on the spawn deck. Whoever uses it gets god mode, 500k points, Mule Kick + Speed Cola + Double Tap + Stamin-Up
 // and three Pack-a-Punched guns (Thundergun, LSAT, SCAR-H). Reusable.
 function godmode_switch()
 {
@@ -824,15 +846,10 @@ function godmode_give()
 	self zm_score::add_to_player_score( 500000 );
 	set_round( 20 );
 
-	// Every perk registered in this map (Mule Kick first so the third gun fits)
-	perks = GetArrayKeys( level._custom_perks );
-	if ( !self HasPerk( "specialty_additionalprimaryweapon" ) && isdefined( level._custom_perks["specialty_additionalprimaryweapon"] ) )
+	// Mule Kick (first, so the third gun fits), Speed Cola, Double Tap and Stamin-Up only
+	foreach ( perk in array( "specialty_additionalprimaryweapon", "specialty_fastreload", "specialty_doubletap2", "specialty_staminup" ) )
 	{
-		self zm_perks::give_perk( "specialty_additionalprimaryweapon", false );
-	}
-	foreach ( perk in perks )
-	{
-		if ( !self HasPerk( perk ) )
+		if ( !self HasPerk( perk ) && isdefined( level._custom_perks[perk] ) )
 		{
 			self zm_perks::give_perk( perk, false );
 		}
@@ -923,6 +940,105 @@ function endgame_front()
 		}
 	}
 	return front;
+}
+
+// Endgame: a zombie in a zone further from spawn than every player is despawned at once and respawned in
+// start_zone (z0). Dogs are left alone. Recalls don't count as new spawns for the endless round advance.
+function endgame_zombie_recall()
+{
+	level flag::wait_till( "endgame_started" );
+	zone_order( "start_zone" );	// builds level.zone_chain
+
+	while ( 1 )
+	{
+		wait 0.5;
+
+		rear = endgame_rear();
+		if ( rear < 0 )
+		{
+			continue;	// nobody is in a zone right now (all mid-air, or on the exit platform)
+		}
+
+		foreach ( zombie in GetAITeamArray( level.zombie_team ) )
+		{
+			if ( !IsAlive( zombie ) || zombie.archetype !== "zombie" || IS_TRUE( zombie.in_the_ground ) )
+			{
+				continue;	// dogs, and zombies still rising
+			}
+			if ( zone_order( zombie_zone( zombie ) ) > rear )
+			{
+				zombie thread recall_zombie_to_spawn();
+			}
+		}
+	}
+}
+
+// Furthest-from-spawn zone that any living player is in (-1 if none): zombies past it are behind everyone
+function endgame_rear()
+{
+	rear = -1;
+	foreach ( player in GetPlayers() )
+	{
+		if ( player.sessionstate != "playing" )
+		{
+			continue;
+		}
+		zone = player zm_zonemgr::get_player_zone();
+		if ( isdefined( zone ) && zone_order( zone ) > rear )
+		{
+			rear = zone_order( zone );
+		}
+	}
+	return rear;
+}
+
+function zombie_zone( zombie )
+{
+	foreach ( zone in level.zone_chain )
+	{
+		if ( zombie zm_zonemgr::entity_in_zone( zone, true ) )
+		{
+			return zone;
+		}
+	}
+	return undefined;
+}
+
+// Despawn like the stock cleanup (no points, no drops), then a fresh zombie rises at a start_zone spot
+function recall_zombie_to_spawn()
+{
+	if ( IS_TRUE( self.endgame_recalled ) )
+	{
+		return;
+	}
+	self.endgame_recalled = true;
+	self.no_powerups = true;
+	self.exclude_cleanup_adding_to_total = true;
+
+	self zombie_utility::reset_attack_spot();
+	self Kill();
+	wait 0.05;
+	if ( isdefined( self ) )
+	{
+		self Delete();
+	}
+
+	spots = [];
+	foreach ( spot in level.zones["start_zone"].a_loc_types["zombie_location"] )
+	{
+		if ( IS_TRUE( spot.is_enabled ) )
+		{
+			spots[spots.size] = spot;
+		}
+	}
+	if ( !spots.size || !level.zombie_spawners.size )
+	{
+		return;
+	}
+
+	level.zombie_total_subtract++;	// endless_new_spawn_count() treats this spawn as a requeue, not a new zombie
+	spawner = array::random( level.zombie_spawners );
+	zombie_utility::spawn_zombie( spawner, spawner.targetname, array::random( spots ) );
 }
 
 // Instant nuke: flash, every zombie dies at once, 400 points each, and spawning isn't held back afterwards
@@ -1028,6 +1144,36 @@ function perk_bottles()
 
 	// z2's middle gap: equidistant (~148) from the octagons at (0,2480) and (+-128,2704), over empty air
 	level thread zm_powerups::specific_powerup_drop( "pap_powerup", ( 0, 2629, 24 ), undefined, undefined, undefined, undefined, true );
+}
+
+// The community pack's Wunderfizz offers every loaded perk; keep only perks with a machine placed in the map
+function wunderfizz_map_perks_only()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	on_map = [];
+	foreach ( machine in struct::get_array( "zm_perk_machine", "targetname" ) )
+	{
+		if ( isdefined( machine.script_noteworthy ) )
+		{
+			on_map[machine.script_noteworthy] = true;
+		}
+	}
+
+	if ( !isdefined( level._random_perk_machine_perk_list ) )
+	{
+		return;
+	}
+
+	kept = [];
+	foreach ( perk in level._random_perk_machine_perk_list )
+	{
+		if ( isdefined( on_map[perk] ) )
+		{
+			kept[kept.size] = perk;
+		}
+	}
+	level._random_perk_machine_perk_list = kept;
 }
 
 // Fire sale can drop even before the box has moved (stock needs at least one box move)
