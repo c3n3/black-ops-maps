@@ -3754,6 +3754,7 @@ material,wc/mtl_t6_wpn_shotty_olympia_wall_chalk
 material,wc/mtl_t6_wpn_smg_mp5_wall_chalk
 material,wc/shadowcaster
 material,wc/t7_acrylic_red_flake
+material,wc/t7_brick_worn_red
 material,wc/t7_decal_blood_splatter_01
 material,wc/t7_glass_green_opaque_01
 material,wc/t7_metal_worn_iron_dark
@@ -3780,6 +3781,7 @@ techset,warp_aberration_refract_screen#da7372ff
 techset,wc/lit#882572b8
 techset,wc/lit_advanced#882572b8
 techset,wc/lit_decal_reveal#882572b8
+techset,wc/lit_detail#882572b8
 techset,wc/lit_emissive_scroll_transparent#882572b8
 techset,wc/lit_micro_tile_blend_advanced#882572b8
 techset,wc/lit_plus#882572b8
@@ -4674,6 +4676,8 @@ image,i_t6_wpn_zmb_thompson_camo1_r
 image,i_t6_wpn_zmb_thompson_camo1_s
 image,i_t7_acrylic_red_flake_c
 image,i_t7_acrylic_red_flake_g
+image,i_t7_brick_worn_dirty_red_n
+image,i_t7_brick_worn_red_c
 image,i_t7_cloth_leather_white_c
 image,i_t7_decal_blood_grunge_01_n
 image,i_t7_decal_blood_splatter_01_r
@@ -4683,6 +4687,7 @@ image,i_t7_decal_grunge_burnt_stain_03_c
 image,i_t7_decal_grunge_burnt_stain_03_n
 image,i_t7_decal_grunge_burnt_stain_03_r
 image,i_t7_detail_acrylic_01_n
+image,i_t7_detail_concrete_01
 image,i_t7_detail_wood_01
 image,i_t7_detail_wood_02
 image,i_t7_glass_dirty_streaks_02_g
@@ -5001,7 +5006,10 @@ fx,blood/fx_blood_trail_zmb
 fx,electrical_spark
 fx,electrical_spark_burst
 fx,endgame_arrow_light
+fx,endgame_spark
+fx,endgame_spark_burst
 fx,fire/fx_fire_barrel_30x30
+fx,fire/fx_fire_ground_rubble_50x50
 fx,fire/fx_fire_ground_rubble_sm_50x50
 fx,fire/fx_fire_line_sm_evb
 fx,light/fx_light_barrel_fire_factory_zmb_strong
@@ -5052,12 +5060,13 @@ animstatemachine,zm_factory_zombie_dog.ai_asm
 animstatemachine,zm_zombie.ai_asm
 behaviortree,zm_factory_zombie_dog.ai_bt
 behaviortree,zm_zombie.ai_bt
-lightdescription,fx_light_headlight_generic1413278251
+lightdescription,fx_light_headlight_generic1489054383
+lightdescription,gfx_dlight_gen_omni-755652678
 lightdescription,gfx_dlight_gen_omni1033436870
 lightdescription,gfx_dlight_gen_omni_r25-72942508
+lightdescription,zm_factory_barrel_fire-1758814733
+lightdescription,zm_factory_barrel_fire1771618710
 lightdescription,zm_factory_barrel_fire517459211
-lightdescription,zm_factory_barrel_fire772561403
-lightdescription,zm_factory_barrel_fire966552806
 lightdescription,zm_factory_barrel_fire96907318
 lightdescription,zm_factory_barrel_fire_strong-829306192
 texturecombo,zm_parkour_nothing0

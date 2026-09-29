@@ -6,7 +6,7 @@ frag_grenade,,,250,grenade,,250,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,grenade,,,
 knife,,,0,,,0,,,FALSE,FALSE,,,,FALSE,FALSE,special,,,
 bowie_knife,,,3000,wpck_bowie,,,,,FALSE,FALSE,,,,FALSE,FALSE,special,,,
 ray_gun,ray_gun_upgraded,,10000,wpck_ray,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,special,TRUE,TRUE,
-tesla_gun,tesla_gun_upgraded,,10000,tesla,,,,,TRUE,FALSE,FALSE,,,FALSE,TRUE,special,TRUE,TRUE,
+tesla_gun,tesla_gun_upgraded,,10000,tesla,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,special,TRUE,TRUE,
 ar_accurate,ar_accurate_upgraded,,1500,rifle,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,rifle,,,
 ar_cqb,ar_cqb_upgraded,,1600,rifle,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,rifle,,,
 ar_damage,ar_damage_upgraded,,5000,rifle,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,rifle,,,
@@ -47,7 +47,7 @@ ar_peacekeeper,ar_peacekeeper_upgraded,,5000,rifle,,,,,FALSE,FALSE,FALSE,,,FALSE
 pistol_energy,pistol_energy_upgraded,,500,energy_pistol,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,pistol,,,reddot steadyaim fastreload
 shotgun_energy,shotgun_energy_upgraded,,5000,shotgun,,,,,FALSE,FALSE,FALSE,0,,FALSE,FALSE,shotgun,,,holo quickdraw stalker_shotgun
 smg_thompson,smg_thompson_upgraded,,1750,smg,,,,,FALSE,FALSE,FALSE,,,FALSE,FALSE,smg,,,
-thundergun,thundergun_upgraded,,10000,thundergun,,,,,FALSE,FALSE,TRUE,1,,FALSE,TRUE,special,TRUE,TRUE,
+thundergun,thundergun_upgraded,,10000,thundergun,,,,,TRUE,FALSE,FALSE,,,FALSE,TRUE,special,TRUE,TRUE,
 launcher_multi,launcher_multi_upgraded,,5000,launcher,,,,,FALSE,FALSE,FALSE,,,FALSE,TRUE,special,TRUE,,
 
 

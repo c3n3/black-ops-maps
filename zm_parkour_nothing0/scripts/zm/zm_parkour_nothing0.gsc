@@ -17,6 +17,7 @@
 #insert scripts\shared\version.gsh;
 
 #insert scripts\zm\_zm_utility.gsh;
+#insert scripts\zm\_zm_powerups.gsh;
 
 #using scripts\zm\_load;
 #using scripts\zm\_zm;
@@ -66,6 +67,7 @@
 #precache( "fx", "fire/fx_fire_line_sm_evb" );
 #precache( "fx", "endgame_arrow_light" );
 #precache( "fx", "ambient_light" );
+#precache( "model", "p7_zm_vending_packapunch_on" );
 
 // The safety-circle teleport uses the Giant's teleporter overlay; overlays must be registered during system init
 REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
@@ -73,6 +75,30 @@ REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
 function safety_overlay_init()
 {
 	visionset_mgr::register_info( "overlay", "zm_factory_teleport", VERSION_SHIP, 61, 1, true );
+
+	// Pack-a-Punch powerup: a shrunken PaP machine; in the regular drop pool, so as likely as an Insta-Kill
+	zm_powerups::register_powerup( "pap_powerup", &grab_pap_powerup, &setup_pap_powerup );
+	zm_powerups::add_zombie_powerup( "pap_powerup", "p7_zm_vending_packapunch_on", undefined, &zm_powerups::func_should_always_drop, POWERUP_ONLY_AFFECTS_GRABBER, !POWERUP_ANY_TEAM, !POWERUP_ZOMBIE_GRABBABLE );
+}
+
+function setup_pap_powerup()
+{
+	self SetScale( 0.2 );
+}
+
+// Pack-a-Punches whatever the collector is holding
+function grab_pap_powerup( player )
+{
+	weapon = player GetCurrentWeapon();
+	if ( !zm_weapons::can_upgrade_weapon( weapon ) || zm_weapons::is_weapon_upgraded( weapon ) )
+	{
+		return;
+	}
+
+	upgraded = zm_weapons::get_upgrade_weapon( weapon );
+	player TakeWeapon( weapon );
+	player zm_weapons::weapon_give( upgraded, true, false, true, true );
+	player GiveMaxAmmo( upgraded );
 }
 
 //*****************************************************************************
@@ -105,7 +131,7 @@ function main()
 
 	zombie_utility::set_zombie_var( "zombie_spawn_delay", 2.0, true );
 	zombie_utility::set_zombie_var( "zombie_between_round_time", 10 );
-	zombie_utility::set_zombie_var( "game_start_delay", 20 );	// 20 s at spawn before the first round starts
+	level.round_prestart_func = &wait_for_map_entrance;	// round 1 starts when the $0 spawn debris is bought
 	level.func_get_zombie_spawn_delay = &endless_get_zombie_spawn_delay;
 
 	// Faster speed ramp than stock (x4): round * 10, where 0-35 walk, 36-70 run, 71+ sprint
@@ -133,6 +159,16 @@ function main()
 
 	level thread dogs_match_zombie_health();
 	level thread void_door_dogs();
+	level thread perk_bottles();
+	if ( isdefined( level.zombie_powerups["fire_sale"] ) )
+	{
+		level.zombie_powerups["fire_sale"].func_should_drop_with_regular_powerups = &fire_sale_can_drop;
+
+		// Drops cycle through level.zombie_powerup_array (one entry per powerup): two more entries = 3x as likely
+		level.zombie_powerup_array[level.zombie_powerup_array.size] = "fire_sale";
+		level.zombie_powerup_array[level.zombie_powerup_array.size] = "fire_sale";
+		level.zombie_powerup_array = array::randomize( level.zombie_powerup_array );
+	}
 
 	level._effect["ambient_light"] = "ambient_light";
 	level thread ambient_light_switch();
@@ -326,6 +362,9 @@ function walkway_trap()
 	level flag::wait_till( "initial_blackscreen_passed" );
 
 	trig = make_use_trigger( handle.origin - ( 0, 24, 45 ), 40, 80, "" );
+	level.walkway_trap_fires = [];
+	level thread walkway_trap_endgame_shutdown( trig );
+	level endon( "walkway_trap_disabled" );
 	while ( 1 )
 	{
 		trig SetHintString( "Hold ^3[{+activate}]^7 to set the walkway on fire [Cost: 5000]" );
@@ -340,10 +379,9 @@ function walkway_trap()
 		trig SetHintString( "The walkway is on fire" );
 		handle RotateRoll( -90, 0.3 );
 
-		fires = [];
 		for ( y = y0; y <= y1; y += 32 )
 		{
-			fires[fires.size] = play_loop_fx( "walkway_fire", ( 0, y, 0 ) );
+			level.walkway_trap_fires[level.walkway_trap_fires.size] = play_loop_fx( "walkway_fire", ( 0, y, 0 ) );
 		}
 
 		end_time = GetTime() + 120000;
@@ -367,15 +405,33 @@ function walkway_trap()
 			wait 0.5;
 		}
 
-		foreach ( fire in fires )
-		{
-			fire Delete();
-		}
+		walkway_trap_put_out();
 
 		trig SetHintString( "The trap is cooling down" );
 		handle RotateRoll( 90, 0.3 );
 		wait 60;
 	}
+}
+
+function walkway_trap_put_out()
+{
+	foreach ( fire in level.walkway_trap_fires )
+	{
+		if ( isdefined( fire ) )
+		{
+			fire Delete();
+		}
+	}
+	level.walkway_trap_fires = [];
+}
+
+// The endgame puts the walkway fire out and the trap can't be used again
+function walkway_trap_endgame_shutdown( trig )
+{
+	level flag::wait_till( "endgame_started" );
+	level notify( "walkway_trap_disabled" );
+	walkway_trap_put_out();
+	trig SetHintString( "The trap is disabled" );
 }
 
 function on_walkway( origin, y0, y1 )
@@ -539,10 +595,7 @@ function lighthouse_switch()
 		handle waittill( "rotatedone" );
 	}
 
-	nuke_origin = SpawnStruct();
-	nuke_origin.origin = player.origin;
-	level thread zm_powerup_nuke::nuke_powerup( nuke_origin, player.team );
-
+	instant_nuke( player );
 	start_endgame( player );
 }
 
@@ -572,16 +625,32 @@ function start_endgame( player )
 	level.zombie_ai_limit = 24 * 6;
 	level.zombie_actor_limit = 31 * 6;
 
-	level thread endgame_dogs();
+	level thread endgame_dogs();	// 100-dog wave with zombie spawns paused, then dogs at 1/3 the zombie rate
 }
 
 // Endgame: the odd dog mixed into the horde, from the dog locations of every (now active) zone
 function endgame_dogs()
 {
+	zones = array( "z10", "z11", "z12", "z13", "z14", "z15", "z16" );
+
+	// Zombie spawning paused (stock "spawn_zombies" flag) while 100 dogs come in at the zombie spawn rate
+	level flag::clear( "spawn_zombies" );
+	spawned = 0;
+	while ( spawned < 100 )
+	{
+		if ( spawn_one_dog( zones ) )
+		{
+			spawned++;
+		}
+		wait level.zombie_vars["zombie_spawn_delay"];
+	}
+	level flag::set( "spawn_zombies" );
+
+	// Afterwards: dogs keep coming at a third of the zombie spawn rate
 	while ( 1 )
 	{
-		wait RandomFloatRange( 10, 20 );
-		zm_ai_dogs::special_dog_spawn( 1 );
+		wait level.zombie_vars["zombie_spawn_delay"] * 3;
+		spawn_one_dog( zones );
 	}
 }
 
@@ -606,7 +675,7 @@ function void_door_dogs()
 {
 	level flag::wait_till( "initial_blackscreen_passed" );	// zone flags exist by now
 	level flag::wait_till( "enter_z10" );
-	zm_ai_dogs::special_dog_spawn( 5 );
+	spawn_dogs_now( 10, array( "z10" ) );
 }
 
 // Endgame exit: a green arrow off the spawn deck's west edge, a drop platform ~1000 below it and a $500 ending.
@@ -692,7 +761,7 @@ function ambient_light_switch()
 	level flag::wait_till( "initial_blackscreen_passed" );
 
 	// this switch faces west, so players stand on its -x side
-	trig = make_use_trigger( handle.origin - ( 24, 0, 45 ), 40, 80, "Hold ^3[{+activate}]^7 to Prefer light and avoid cool ambience [Cost: 100]" );
+	trig = make_use_trigger( handle.origin + ( 0, 24, -45 ), 40, 80, "Hold ^3[{+activate}]^7 to Prefer light and avoid cool ambience [Cost: 100]" );
 	lamp = undefined;
 	while ( 1 )
 	{
@@ -707,7 +776,7 @@ function ambient_light_switch()
 		if ( !isdefined( lamp ) )
 		{
 			handle RotateRoll( -90, 0.3 );
-			lamp = play_loop_fx( "ambient_light", ( 0, 9600, 1000 ) );
+			lamp = play_loop_fx( "ambient_light", ( 0, 19648, 1000 ) );
 		}
 		else
 		{
@@ -720,7 +789,7 @@ function ambient_light_switch()
 }
 
 // TESTING ONLY: switch on the spawn deck. Whoever uses it gets god mode, 500k points, every perk in the map
-// and three Pack-a-Punched guns (Wunderwaffe, LSAT, SCAR-H). Reusable.
+// and three Pack-a-Punched guns (Thundergun, LSAT, SCAR-H). Reusable.
 function godmode_switch()
 {
 	handle = GetEnt( "godmode_switch_handle", "targetname" );
@@ -770,7 +839,7 @@ function godmode_give()
 	{
 		self TakeWeapon( weapon );
 	}
-	foreach ( name in array( "t6_scarh_up", "t6_lsat_up", "tesla_gun_upgraded" ) )
+	foreach ( name in array( "t6_scarh_up", "t6_lsat_up", "thundergun_upgraded" ) )
 	{
 		weapon = GetWeapon( name );
 		self zm_weapons::weapon_give( weapon, true, false, true, true );
@@ -813,7 +882,154 @@ function endgame_exit_no_fall_damage( eInflictor, eAttacker, iDamage, iDFlags, s
 
 function endgame_zone_occupied( zone_name )
 {
+	if ( zm_zonemgr::any_player_in_zone( zone_name ) )
+	{
+		return true;
+	}
+	return zone_order( zone_name ) < endgame_front();
+}
+
+// Spawn -> lighthouse order of the zone chain
+function zone_order( zone_name )
+{
+	if ( !isdefined( level.zone_chain ) )
+	{
+		level.zone_chain = array( "start_zone", "z1", "z2", "z3", "z4", "z5", "z10", "z11", "z12", "z13", "z14", "z15", "z16", "lighthouse" );
+	}
+	for ( i = 0; i < level.zone_chain.size; i++ )
+	{
+		if ( level.zone_chain[i] == zone_name )
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+// The furthest zone any player is still in: everything before it (toward spawn) stays active
+function endgame_front()
+{
+	front = -1;
+	foreach ( player in GetPlayers() )
+	{
+		zone = player zm_zonemgr::get_player_zone();
+		if ( isdefined( zone ) && zone_order( zone ) > front )
+		{
+			front = zone_order( zone );
+		}
+	}
+	return front;
+}
+
+// Instant nuke: flash, every zombie dies at once, 400 points each, and spawning isn't held back afterwards
+function instant_nuke( player )
+{
+	level thread zm_powerup_nuke::nuke_flash( player.team );
+	foreach ( zombie in GetAITeamArray( level.zombie_team ) )
+	{
+		if ( IsAlive( zombie ) && !IS_TRUE( zombie.ignore_nuke ) )
+		{
+			zombie DoDamage( zombie.health + 666, zombie.origin );
+		}
+	}
+	foreach ( p in GetPlayers( player.team ) )
+	{
+		p zm_score::player_add_points( "nuke_powerup", 400 );
+	}
+}
+
+// Spawns n dogs at once at the dog spots of the given zones (bypasses the stock one-at-a-time, 9-dog special spawn)
+function spawn_dogs_now( n, zones )
+{
+	if ( !isdefined( level.dog_spawners ) || !level.dog_spawners.size )
+	{
+		return;
+	}
+
+	spots = [];
+	foreach ( zone in zones )
+	{
+		foreach ( s in struct::get_array( zone + "_spawners", "targetname" ) )
+		{
+			if ( s.script_noteworthy === "dog_location" )
+			{
+				spots[spots.size] = s;
+			}
+		}
+	}
+	if ( !spots.size )
+	{
+		return;
+	}
+
+	spots = array::randomize( spots );
+	for ( i = 0; i < n; i++ )
+	{
+		spawn_dog_at( spots[i % spots.size] );
+	}
+}
+
+// One dog at a random dog spot of the given zones; false if it couldn't spawn (e.g. at the AI limit)
+function spawn_one_dog( zones )
+{
+	spots = [];
+	foreach ( zone in zones )
+	{
+		foreach ( s in struct::get_array( zone + "_spawners", "targetname" ) )
+		{
+			if ( s.script_noteworthy === "dog_location" )
+			{
+				spots[spots.size] = s;
+			}
+		}
+	}
+	if ( !spots.size )
+	{
+		return false;
+	}
+	return spawn_dog_at( array::random( spots ) );
+}
+
+function spawn_dog_at( spot )
+{
+	if ( !isdefined( level.dog_spawners ) || !level.dog_spawners.size )
+	{
+		return false;
+	}
+	dog = zombie_utility::spawn_zombie( level.dog_spawners[0] );
+	if ( !isdefined( dog ) )
+	{
+		return false;
+	}
+	dog.favoriteenemy = zm_ai_dogs::get_favorite_enemy();
+	spot thread zm_ai_dogs::dog_spawn_fx( dog, spot );
 	return true;
+}
+
+function wait_for_map_entrance()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+	level flag::wait_till( "map_entrance_open" );
+	wait 2;
+}
+
+// Free Perk bottles that never time out: two in the Void's spawn-side corners, one at the top of the lighthouse
+function perk_bottles()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+	foreach ( spot in array( ( -1001, 7152, 0 ), ( 1001, 7152, 0 ), ( 130, 19518, 512 ) ) )
+	{
+		level thread zm_powerups::specific_powerup_drop( "free_perk", spot, undefined, undefined, undefined, undefined, true );
+	}
+
+	// z2's middle gap: equidistant (~148) from the octagons at (0,2480) and (+-128,2704), over empty air
+	level thread zm_powerups::specific_powerup_drop( "pap_powerup", ( 0, 2629, 24 ), undefined, undefined, undefined, undefined, true );
+}
+
+// Fire sale can drop even before the box has moved (stock needs at least one box move)
+function fire_sale_can_drop()
+{
+	return !IS_TRUE( level.zombie_vars["zombie_powerup_fire_sale_on"] );
 }
 
 // Script lighting states are 0-based: script 0 = Radiant lighting state 1, script 1 = Radiant lighting state 2.

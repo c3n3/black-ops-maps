@@ -28,6 +28,9 @@ fx,fire/fx_fire_line_sm_evb
 fx,endgame_arrow_light
 fx,ambient_light
 
+// Pack-a-Punch powerup model
+xmodel,p7_zm_vending_packapunch_on
+
 // Safety-circle teleport (the Giant teleporter postfx)
 scriptbundle,pstfx_zm_der_teleport
 

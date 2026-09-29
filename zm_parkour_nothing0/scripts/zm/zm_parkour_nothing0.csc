@@ -7,6 +7,7 @@
 #using scripts\shared\util_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\visionset_mgr_shared;
+#using scripts\zm\_zm_powerups;
 
 #insert scripts\shared\shared.gsh;
 #insert scripts\shared\version.gsh;
@@ -45,6 +46,10 @@ REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
 function safety_overlay_init()
 {
 	visionset_mgr::register_overlay_info_style_postfx_bundle( "zm_factory_teleport", VERSION_SHIP, 1, "pstfx_zm_der_teleport" );
+
+	// Pack-a-Punch powerup (server registers the same name)
+	zm_powerups::include_zombie_powerup( "pap_powerup" );
+	zm_powerups::add_zombie_powerup( "pap_powerup" );
 }
 
 function main()
