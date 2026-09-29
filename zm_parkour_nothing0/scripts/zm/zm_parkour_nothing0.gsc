@@ -65,6 +65,7 @@
 #precache( "fx", "void_campfire_light" );
 #precache( "fx", "fire/fx_fire_line_sm_evb" );
 #precache( "fx", "endgame_arrow_light" );
+#precache( "fx", "ambient_light" );
 
 // The safety-circle teleport uses the Giant's teleporter overlay; overlays must be registered during system init
 REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
@@ -104,6 +105,7 @@ function main()
 
 	zombie_utility::set_zombie_var( "zombie_spawn_delay", 2.0, true );
 	zombie_utility::set_zombie_var( "zombie_between_round_time", 10 );
+	zombie_utility::set_zombie_var( "game_start_delay", 20 );	// 20 s at spawn before the first round starts
 	level.func_get_zombie_spawn_delay = &endless_get_zombie_spawn_delay;
 
 	// Faster speed ramp than stock (x4): round * 10, where 0-35 walk, 36-70 run, 71+ sprint
@@ -131,6 +133,9 @@ function main()
 
 	level thread dogs_match_zombie_health();
 	level thread void_door_dogs();
+
+	level._effect["ambient_light"] = "ambient_light";
+	level thread ambient_light_switch();
 
 	level thread godmode_switch();	// TESTING ONLY
 
@@ -671,6 +676,46 @@ function endgame_exit()
 		wait 0.5;
 		level notify( "end_game" );
 		return;
+	}
+}
+
+// Switch on the east side of the spawn deck: 100 per pull, toggles one huge steady light high over the middle
+// of the map (just under the sky box ceiling; 2 stops, radius 11000, no falloff).
+function ambient_light_switch()
+{
+	handle = GetEnt( "ambient_light_handle", "targetname" );
+	if ( !isdefined( handle ) )
+	{
+		return;
+	}
+
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	// this switch faces west, so players stand on its -x side
+	trig = make_use_trigger( handle.origin - ( 24, 0, 45 ), 40, 80, "Hold ^3[{+activate}]^7 to Prefer light and avoid cool ambience [Cost: 100]" );
+	lamp = undefined;
+	while ( 1 )
+	{
+		trig waittill( "trigger", player );
+		if ( player.score < 100 )
+		{
+			player zm_audio::create_and_play_dialog( "general", "outofmoney" );
+			continue;
+		}
+		player zm_score::minus_to_player_score( 100 );
+
+		if ( !isdefined( lamp ) )
+		{
+			handle RotateRoll( -90, 0.3 );
+			lamp = play_loop_fx( "ambient_light", ( 0, 9600, 1000 ) );
+		}
+		else
+		{
+			handle RotateRoll( 90, 0.3 );
+			lamp Delete();
+			lamp = undefined;
+		}
+		wait 0.5;
 	}
 }
 

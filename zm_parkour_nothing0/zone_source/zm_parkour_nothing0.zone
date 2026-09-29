@@ -26,6 +26,7 @@ fx,fire/fx_fire_ground_rubble_sm_50x50
 fx,void_campfire_light
 fx,fire/fx_fire_line_sm_evb
 fx,endgame_arrow_light
+fx,ambient_light
 
 // Safety-circle teleport (the Giant teleporter postfx)
 scriptbundle,pstfx_zm_der_teleport

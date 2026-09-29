@@ -20,6 +20,7 @@ YC = YC_OLD + SHIFT                 # lighthouse after the slide (19648)
 m = Map(sys.argv[1])
 assert m.find(targetname="z9"), "zones z6-z9 already cut"
 
+NL = chr(10)
 PT = re.compile(r"\( (\S+) (\S+) (\S+) \)")
 
 
@@ -61,8 +62,27 @@ def shift_all(text):
 
 
 def shift_north_points(text):
-    return PT.sub(lambda g: f"( {g.group(1)} {num(float(g.group(2)) + SHIFT)} {g.group(3)} )"
-                  if float(g.group(2)) >= CUT_END else g.group(0), text)
+    """Move only the points north of the cut, one face at a time. Moving some of a face's 3 points along y can
+    reverse their winding (flipping the face inside-out), so swap points 2 and 3 back when that happens."""
+    def fix_line(line):
+        pts = [tuple(map(float, p)) for p in PT.findall(line)]
+        if len(pts) != 3:
+            return line
+        moved = [(x, y + SHIFT if y >= CUT_END else y, z) for x, y, z in pts]
+
+        def normal(a, b, c):
+            u = [b[k] - a[k] for k in range(3)]
+            v = [c[k] - a[k] for k in range(3)]
+            return (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+
+        before, after = normal(*pts), normal(*moved)
+        if sum(before[k] * after[k] for k in range(3)) < 0:
+            moved = [moved[0], moved[2], moved[1]]
+        new_pts = " ".join(f"( {num(x)} {num(y)} {num(z)} )" for x, y, z in moved)
+        spans = [g.span() for g in PT.finditer(line)]
+        return line[: spans[0][0]] + new_pts + line[spans[-1][1]:]
+
+    return NL.join(fix_line(l) for l in text.split(NL))
 
 
 def classify(lo, hi):

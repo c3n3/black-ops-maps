@@ -252,3 +252,22 @@ def switch(x, y, handle_name, z=0):
                 ("origin", origin(x - 1, y - 7, z + 45)), ("targetname", handle_name), ("client_server", "ServerSide"),
                 ("modelscale", "1")] + [(f"lightingstate{i}", "1") for i in range(1, 5)]),
     ]
+
+
+def bounds(brush_text):
+    """Real vertex bounds ((minx, miny, minz), (maxx, maxy, maxz)) of a convex brush, from its planes."""
+    pts = [tuple(map(float, p)) for p in re.findall(r"\( (\S+) (\S+) (\S+) \)", brush_text)]
+    planes = []
+    for i in range(0, len(pts), 3):
+        a, b, c = pts[i:i + 3]
+        n = _norm(_cross(_sub(b, a), _sub(c, a)))
+        planes.append((n, _dot(n, a)))
+    verts = []
+    for (n1, d1), (n2, d2), (n3, d3) in itertools.combinations(planes, 3):
+        det = _dot(n1, _cross(n2, n3))
+        if abs(det) < 1e-9:
+            continue
+        x = tuple((d1 * _cross(n2, n3)[i] + d2 * _cross(n3, n1)[i] + d3 * _cross(n1, n2)[i]) / det for i in range(3))
+        if all(_dot(n, x) >= dd - 1e-2 for n, dd in planes):
+            verts.append(x)
+    return tuple(min(v[i] for v in verts) for i in range(3)), tuple(max(v[i] for v in verts) for i in range(3))

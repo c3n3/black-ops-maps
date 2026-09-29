@@ -3753,7 +3753,7 @@ material,wc/mtl_t6_wpn_shotty_870mcs_wall_chalk
 material,wc/mtl_t6_wpn_shotty_olympia_wall_chalk
 material,wc/mtl_t6_wpn_smg_mp5_wall_chalk
 material,wc/shadowcaster
-material,wc/t7_decal_blood_smear_01
+material,wc/t7_acrylic_red_flake
 material,wc/t7_decal_blood_splatter_01
 material,wc/t7_glass_green_opaque_01
 material,wc/t7_metal_worn_iron_dark
@@ -4672,9 +4672,10 @@ image,i_t6_wpn_zmb_thompson_camo1_n
 image,i_t6_wpn_zmb_thompson_camo1_o
 image,i_t6_wpn_zmb_thompson_camo1_r
 image,i_t6_wpn_zmb_thompson_camo1_s
+image,i_t7_acrylic_red_flake_c
+image,i_t7_acrylic_red_flake_g
 image,i_t7_cloth_leather_white_c
 image,i_t7_decal_blood_grunge_01_n
-image,i_t7_decal_blood_smear_01_r
 image,i_t7_decal_blood_splatter_01_r
 image,i_t7_decal_damage_plywood_edge_dirty_c
 image,i_t7_decal_damage_plywood_edge_n
@@ -4991,6 +4992,7 @@ fx,_scobalula/shellejects/mwr/h1_shell_eject_762x54
 fx,_scobalula/shellejects/mwr/h1_shell_eject_762x54_rest
 fx,_scobalula/shellejects/mwr/h1_shell_eject_9mm
 fx,_scobalula/shellejects/mwr/h1_shell_eject_9mm_rest
+fx,ambient_light
 fx,blood/fx_blood_gib_arm_sever_burst
 fx,blood/fx_blood_gib_leg_sever_burst
 fx,blood/fx_blood_impact_exp_body_lg_zmb
@@ -5003,6 +5005,7 @@ fx,fire/fx_fire_barrel_30x30
 fx,fire/fx_fire_ground_rubble_sm_50x50
 fx,fire/fx_fire_line_sm_evb
 fx,light/fx_light_barrel_fire_factory_zmb_strong
+fx,light/fx_light_fire_flicker_noshad_small
 fx,lighthouse_beam
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_flesh_impact_up
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_impact_up
@@ -5053,6 +5056,7 @@ lightdescription,fx_light_headlight_generic1413278251
 lightdescription,gfx_dlight_gen_omni1033436870
 lightdescription,gfx_dlight_gen_omni_r25-72942508
 lightdescription,zm_factory_barrel_fire517459211
+lightdescription,zm_factory_barrel_fire772561403
 lightdescription,zm_factory_barrel_fire966552806
 lightdescription,zm_factory_barrel_fire96907318
 lightdescription,zm_factory_barrel_fire_strong-829306192

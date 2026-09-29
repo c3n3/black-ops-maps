@@ -8,7 +8,7 @@ xmodelmesh,34816,692
 material,20480,721
 computeshaderset,256,0
 techset,1024,69
-image,49152,1284
+image,49152,1285
 sound,32,1
 sound_patch,16,0
 col_map,2,1
@@ -37,7 +37,7 @@ customizationtable,8,0
 customizationtable_feimages,8,0
 customizationtablecolor,1024,0
 snddriverglobals,1,0
-fx,1875,184
+fx,1875,186
 tagfx,64,0
 klf,64,2
 impactsfxtable,256,3
@@ -81,7 +81,7 @@ behaviortree,64,2
 behaviorstatemachine,128,0
 ttf,48,0
 sanim,1024,0
-lightdescription,500,15
+lightdescription,500,16
 shellshock,64,0
 xcam,512,0
 bgcache,32,1
