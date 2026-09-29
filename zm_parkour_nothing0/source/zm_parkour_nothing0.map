@@ -17753,3 +17753,10 @@ guid "{C0B1022F-B4F9-4A08-ADD9-6B95F33DABB8}"
 "lightingstate3" "1"
 "lightingstate4" "1"
 }
+// entity 1081
+{
+guid "{F0D4D728-2449-49B5-B46D-24B9B5D14527}"
+"classname" "misc_prefab"
+"model" "_prefabs/caden/vending_mule_lick_struct.map"
+"origin" "30 30 16"
+}

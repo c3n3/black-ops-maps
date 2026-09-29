@@ -1,15 +1,16 @@
 xmodel,avgArea (min 50.0),triCount (max 0),dimX,dimY,dimZ,volume,refs
 p7_zm_vending_packapunch,41.29,737,85.53,48.12,86.44,355755.25,1
 p7_zm_vending_packapunch_on,41.29,737,85.53,48.12,86.44,355755.25,1
-p7_cinder_block,4.99,148,16.16,6.23,8.01,807.17,21
-p7_zm_der_light_shade,8.29,146,24.20,24.20,11.00,6442.89,100
+p7_cinder_block,4.99,148,16.16,6.23,8.01,807.17,25
+p7_zm_der_light_shade,8.29,146,24.20,24.20,11.00,6442.89,125
 p7_zm_der_light_wall_mount,7.96,76,32.02,4.89,14.07,2201.56,2
-p7_zm_der2_light_hurricane_lamp,15.71,60,12.83,11.50,26.46,3905.17,99
+p7_zm_der2_light_hurricane_lamp,15.71,60,12.83,11.50,26.46,3905.17,124
 p7_fxp_debris_wood_splinter_03,0.39,52,1.00,6.09,1.13,6.85,1
 p7_fxp_debris_wood_splinter_02,0.15,48,0.78,3.73,0.88,2.55,1
 p7_zm_der_pswitch_handle,8.56,44,18.42,4.44,25.20,2060.67,1
 c_zom_der_zombie_helmet1,7.07,32,10.01,10.56,9.27,979.39,1
 p7_zm_der_magic_box_fake,28.14,20,12.97,10.80,14.06,1970.22,1
+p7_debris_rockychunks_small_07,16.16,16,16.05,12.12,4.22,821.45,343
 c_zom_zod_zombie_fem_body1_g_rarmspawn,1.62,16,10.08,4.44,4.24,189.80,1
 p7_gib_chunk_meat_01,4.31,16,2.61,7.35,8.75,167.67,1
 p7_gib_chunk_meat_02,3.93,16,4.00,7.68,5.48,168.48,1

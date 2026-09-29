@@ -42,6 +42,7 @@
 #using scripts\zm\_zm_perk_quick_revive;
 #using scripts\zm\_zm_perk_sleight_of_hand;
 #using scripts\zm\_zm_perk_staminup;
+#using scripts\zm\_zm_perk_mule_lick;
 
 //Powerups
 #using scripts\zm\_zm_powerup_double_points;
@@ -61,7 +62,8 @@
 #precache( "fx", "lighthouse_beam" );
 #precache( "fx", "void_pole_light" );
 #precache( "fx", "fire/fx_fire_ground_rubble_sm_50x50" );
-#precache( "fx", "light/fx_light_fire_flicker_noshad_small" );
+#precache( "fx", "void_campfire_light" );
+#precache( "fx", "fire/fx_fire_line_sm_evb" );
 #precache( "fx", "endgame_arrow_light" );
 
 // The safety-circle teleport uses the Giant's teleporter overlay; overlays must be registered during system init
@@ -90,6 +92,11 @@ function main()
 
 	level.dog_rounds_allowed = false;
 
+	// 3x the stock spawn limits (24 zombies alive, 31 AI actors); the endgame raises them to 6x.
+	// The engine has its own AI cap, so very high values just stop at whatever it allows.
+	level.zombie_ai_limit = 24 * 3;
+	level.zombie_actor_limit = 31 * 3;
+
 	// No perk limit (stock is 4); _zm_perks sets it during system init, so this overrides it
 	level.perk_purchase_limit = 99;
 
@@ -115,11 +122,15 @@ function main()
 
 	level._effect["void_pole_light"] = "void_pole_light";
 	level._effect["void_campfire"] = "fire/fx_fire_ground_rubble_sm_50x50";
-	level._effect["void_campfire_light"] = "light/fx_light_fire_flicker_noshad_small";
+	level._effect["walkway_fire"] = "fire/fx_fire_line_sm_evb";
+	level._effect["void_campfire_light"] = "void_campfire_light";	// stock flicker light at 80%
 	level thread void_pole();
 	level thread void_campfires();
 
 	level thread walkway_trap();
+
+	level thread dogs_match_zombie_health();
+	level thread void_door_dogs();
 
 	level thread godmode_switch();	// TESTING ONLY
 
@@ -133,6 +144,18 @@ function main()
 	level thread lighthouse_reached_watch();
 	level thread safety_sign();
 	callback::on_spawned( &safety_player_think );
+
+	// Falling below the paths leaves every zone volume; stock would laugh and kill the player 0.5 s later
+	// (_zm.gsc player_out_of_playable_area_monitor). The safety circles and the bottom-of-sky down handle
+	// falling instead, and the endgame exit platform is outside every zone too.
+	level.player_out_of_playable_area_monitor_callback = &allow_out_of_playable_area;
+}
+
+// Returning false stops the stock out-of-playable-area kill. Anyone below the paths is falling (or on the
+// exit platform); the rest of the map is inside zone volumes, so this only ever skips those cases.
+function allow_out_of_playable_area()
+{
+	return self.origin[2] > -24;
 }
 
 // Green circles under the paths: falling or downed players shoot one to teleport to safety
@@ -158,7 +181,7 @@ function lighthouse_reached_watch()
 	{
 		foreach ( player in GetPlayers() )
 		{
-			if ( Distance2DSquared( player.origin, ( 0, 24576, 0 ) ) < 400 * 400 && player.origin[2] > -40 )
+			if ( Distance2DSquared( player.origin, ( 0, 19648, 0 ) ) < 400 * 400 && player.origin[2] > -40 )
 			{
 				level flag::set( "lighthouse_reached" );
 				return;
@@ -191,6 +214,8 @@ function safety_player_think()
 	while ( 1 )
 	{
 		self waittill( "weapon_fired" );
+		self campfire_shot_check();
+
 		if ( IS_TRUE( self.safety_teleporting ) || !isdefined( level.safety_circles ) )
 		{
 			continue;
@@ -311,9 +336,9 @@ function walkway_trap()
 		handle RotateRoll( -90, 0.3 );
 
 		fires = [];
-		for ( y = y0; y <= y1; y += 42 )
+		for ( y = y0; y <= y1; y += 32 )
 		{
-			fires[fires.size] = play_loop_fx( "void_campfire", ( 0, y, 0 ) );
+			fires[fires.size] = play_loop_fx( "walkway_fire", ( 0, y, 0 ) );
 		}
 
 		end_time = GetTime() + 120000;
@@ -401,17 +426,24 @@ function void_campfires()
 {
 	level flag::wait_till( "initial_blackscreen_passed" );
 
-	foreach ( fire in struct::get_array( "void_campfire", "targetname" ) )
+	level.void_campfires = struct::get_array( "void_campfire", "targetname" );
+	foreach ( fire in level.void_campfires )
 	{
 		fire thread void_campfire_think();
 	}
 }
 
+// Lit by using it or by shooting it (see campfire_shot_check)
 function void_campfire_think()
 {
 	trig = make_use_trigger( self.origin, 48, 64, "Hold ^3[{+activate}]^7 to light the fire" );
-	trig waittill( "trigger" );
-	trig Delete();
+	trig thread campfire_use_relay( self );
+	self waittill( "light_campfire" );
+	self.lit = true;
+	if ( isdefined( trig ) )
+	{
+		trig Delete();
+	}
 
 	play_loop_fx( "void_campfire", self.origin );
 	play_loop_fx( "void_campfire_light", self.origin + ( 0, 0, 24 ) );
@@ -435,12 +467,38 @@ function void_campfire_think()
 	}
 }
 
+function campfire_use_relay( fire )
+{
+	self endon( "death" );
+	self waittill( "trigger" );
+	fire notify( "light_campfire" );
+}
+
+// A shot landing within 40 units of an unlit campfire lights it (self = the player who fired)
+function campfire_shot_check()
+{
+	if ( !isdefined( level.void_campfires ) )
+	{
+		return;
+	}
+
+	eye = self GetPlayerCameraPos();
+	hit = BulletTrace( eye, eye + AnglesToForward( self GetPlayerAngles() ) * 8000, false, self )["position"];
+	foreach ( fire in level.void_campfires )
+	{
+		if ( !IS_TRUE( fire.lit ) && DistanceSquared( hit, fire.origin ) < 40 * 40 )
+		{
+			fire notify( "light_campfire" );
+		}
+	}
+}
+
 // Spot light on the lighthouse lamp, sweeping a full circle every 20 seconds
 function lighthouse_beam()
 {
 	level flag::wait_till( "initial_blackscreen_passed" );
 
-	beam = Spawn( "script_model", ( 0, 24576, 620 ) );
+	beam = Spawn( "script_model", ( 0, 19648, 620 ) );
 	beam SetModel( "tag_origin" );
 	beam.angles = ( 2, 270, 0 );	// facing the map (south), 2 degrees down
 	util::wait_network_frame();
@@ -505,6 +563,10 @@ function start_endgame( player )
 	// Every enabled zone counts as occupied, so all of them are active for spawning
 	level.zone_occupied_func = &endgame_zone_occupied;
 
+	// 6x the stock spawn limits
+	level.zombie_ai_limit = 24 * 6;
+	level.zombie_actor_limit = 31 * 6;
+
 	level thread endgame_dogs();
 }
 
@@ -516,6 +578,30 @@ function endgame_dogs()
 		wait RandomFloatRange( 10, 20 );
 		zm_ai_dogs::special_dog_spawn( 1 );
 	}
+}
+
+// Dogs have the same health as a zombie of the current round.
+// Stock: a dog spawns with level.dog_health * scr_dog_health_walk_multiplier (default 4); dog rounds (which ramp
+// level.dog_health) are off in this map, so keep it in step with the zombie health and drop the multiplier.
+function dogs_match_zombie_health()
+{
+	SetDvar( "scr_dog_health_walk_multiplier", "1" );
+	while ( 1 )
+	{
+		if ( isdefined( level.zombie_health ) )
+		{
+			level.dog_health = level.zombie_health;
+		}
+		wait 1;
+	}
+}
+
+// Opening the Void (debris9 sets enter_z10) lets loose 5 dogs
+function void_door_dogs()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );	// zone flags exist by now
+	level flag::wait_till( "enter_z10" );
+	zm_ai_dogs::special_dog_spawn( 5 );
 }
 
 // Endgame exit: a green arrow off the spawn deck's west edge, a drop platform ~1000 below it and a $500 ending.
@@ -618,6 +704,7 @@ function godmode_give()
 
 	self EnableInvulnerability();
 	self zm_score::add_to_player_score( 500000 );
+	set_round( 20 );
 
 	// Every perk registered in this map (Mule Kick first so the third gun fits)
 	perks = GetArrayKeys( level._custom_perks );
@@ -644,6 +731,16 @@ function godmode_give()
 		self zm_weapons::weapon_give( weapon, true, false, true, true );
 		self GiveMaxAmmo( weapon );
 	}
+}
+
+// Jump straight to round n (only ever forward): same updates as a normal round change
+function set_round( n )
+{
+	while ( zm::get_round_number() < n )
+	{
+		endless_next_round();
+	}
+	endless_reset_spawn_count();
 }
 
 // Respawn override: returns a spot with .origin/.angles (the safety circles' lighthouse destination)
@@ -799,7 +896,14 @@ function usermap_test_zone_init()
 
 	// Linear chain north: the debris door into zN sets enter_zN
 	zm_zonemgr::add_adjacent_zone( "start_zone", "z1", "enter_z1" );
-	for ( i = 2; i <= 16; i++ )
+	for ( i = 2; i <= 5; i++ )
+	{
+		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
+	}
+
+	// z6-z9 were cut: the Void (z10) follows z5 (its door, debris9, still sets enter_z10)
+	zm_zonemgr::add_adjacent_zone( "z5", "z10", "enter_z10" );
+	for ( i = 11; i <= 16; i++ )
 	{
 		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
 	}

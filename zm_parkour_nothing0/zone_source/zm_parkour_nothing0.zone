@@ -13,12 +13,18 @@ sound,zm_parkour_nothing0
 
 scriptparsetree,scripts/zm/zm_parkour_nothing0.gsc
 scriptparsetree,scripts/zm/zm_parkour_nothing0.csc
+scriptparsetree,scripts/zm/_zm_perk_mule_lick.gsc
+scriptparsetree,scripts/zm/_zm_perk_mule_lick.csc
+
+// Mule Lick HUD icon (source_data/zm_parkour_nothing0.gdt)
+material,mule_lick_icon
 
 // FX used only from script
 fx,lighthouse_beam
 fx,void_pole_light
 fx,fire/fx_fire_ground_rubble_sm_50x50
-fx,light/fx_light_fire_flicker_noshad_small
+fx,void_campfire_light
+fx,fire/fx_fire_line_sm_evb
 fx,endgame_arrow_light
 
 // Safety-circle teleport (the Giant teleporter postfx)
