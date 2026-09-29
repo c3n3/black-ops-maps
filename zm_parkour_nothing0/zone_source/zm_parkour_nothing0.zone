@@ -1,6 +1,14 @@
 >class,zm_mod_level
 >group,modtools
 
+//Westchief596
+include,wests_perk_pack_icons
+
+//Westchief596
+include,community_perk_collection
+
+include,hud_t7
+
 xmodel,skybox_default_day
 material,luts_t7_default
 	

@@ -10,3 +10,5 @@
 /zone_source/*/scriptgdb/
 /zone_source/loc/
 *.errorlog
+*zm_parkour_nothing0.all.sabl
+*zm_parkour_nothing0.all.sabs

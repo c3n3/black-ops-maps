@@ -45,6 +45,10 @@
 #using scripts\zm\_zm_perk_staminup;
 #using scripts\zm\_zm_perk_mule_lick;
 
+//Westchief596
+#using scripts\zm\_community_perk_collection;
+#using scripts\zm\_community_perk_collection_setup;
+
 //Powerups
 #using scripts\zm\_zm_powerup_double_points;
 #using scripts\zm\_zm_powerup_carpenter;
