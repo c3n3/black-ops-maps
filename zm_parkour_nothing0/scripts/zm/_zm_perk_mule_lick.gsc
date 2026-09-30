@@ -17,7 +17,7 @@
 #insert scripts\zm\_zm_utility.gsh;
 
 // MULE LICK (design 9)
-// 500 points. -1 gun slot. The next perk gained after it (by any means) is bound to it: Mule Lick and that perk
+// 500 points. -1 gun slot. The next 2 perks gained after it (by any means) are bound to it: Mule Lick and those perks
 // are never lost to downs or deaths for the rest of the game. One binding per player, irreversible.
 // Mule Kick + Mule Lick = the normal 2 guns.
 // Design 11: a full custom perk (CYO template layout). Machine: DEVRAW Dew's model re-textured dark red with a
@@ -37,6 +37,7 @@
 #define MULE_LICK_FX_FILE					"zm_parkour_nothing0/mulelick"
 #define MULE_LICK_JINGLE					"mus_perks_mulelick_jingle"
 #define MULE_LICK_STING						"mus_perks_mulelick_sting"
+#define MULE_LICK_BINDS						2		// perks kept for good after Mule Lick
 
 #precache( "string", "MULELICK_PERK_MULE_LICK_STRING" );
 #precache( "fx", MULE_LICK_FX_FILE );
@@ -145,34 +146,37 @@ function drop_extra_guns()
 	}
 }
 
-// The next perk gained after Mule Lick, by any means, is kept for good; one binding per game
+// The next MULE_LICK_BINDS perks gained after Mule Lick, by any means, are kept for good; once per game
 function mule_lick_bind_next_perk()
 {
 	self endon( "disconnect" );
 
+	if ( !isdefined( self.mule_lick_bound ) )
+	{
+		self.mule_lick_bound = [];
+	}
 	before = [];
 	if ( isdefined( self.perks_active ) )
 	{
 		before = ArrayCopy( self.perks_active );
 	}
 
-	while ( !isdefined( self.mule_lick_bound ) )
+	while ( self.mule_lick_bound.size < MULE_LICK_BINDS )
 	{
 		self waittill( "perk_acquired" );
 		foreach ( perk in self.perks_active )
 		{
-			if ( perk != PERK_MULE_LICK && !IsInArray( before, perk ) )
+			if ( self.mule_lick_bound.size < MULE_LICK_BINDS && perk != PERK_MULE_LICK && !IsInArray( before, perk ) && !IsInArray( self.mule_lick_bound, perk ) )
 			{
-				self.mule_lick_bound = perk;
+				self.mule_lick_bound[self.mule_lick_bound.size] = perk;
 				self._retain_perks_array[perk] = true;
-				self IPrintLnBold( "Mule Lick: this perk is yours for good" );
-				break;
+				self IPrintLnBold( "Mule Lick: this perk is yours for good (" + self.mule_lick_bound.size + "/" + MULE_LICK_BINDS + ")" );
 			}
 		}
 	}
 }
 
-// Downs never take retained perks, but a respawn starts clean: give Mule Lick and its bound perk back
+// Downs never take retained perks, but a respawn starts clean: give Mule Lick and its bound perks back
 function mule_lick_restore_on_spawn()
 {
 	self endon( "disconnect" );
@@ -183,7 +187,12 @@ function mule_lick_restore_on_spawn()
 	}
 
 	util::wait_network_frame();
-	foreach ( perk in array( PERK_MULE_LICK, self.mule_lick_bound ) )
+	perks = array( PERK_MULE_LICK );
+	if ( isdefined( self.mule_lick_bound ) )
+	{
+		perks = ArrayCombine( perks, self.mule_lick_bound, false, false );
+	}
+	foreach ( perk in perks )
 	{
 		if ( isdefined( perk ) && !self HasPerk( perk ) )
 		{

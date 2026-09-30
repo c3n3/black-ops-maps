@@ -212,4 +212,5 @@ xmodel,c_zom_der_zombie_body1_g_upclean
 xmodel,c_zom_der_zombie_body1_g_rarmoff
 xmodel,c_zom_der_zombie_body1_g_larmoff
 localize,mulelick_perk
+localize,vodka_perk
 sound,zm_parkour_nothing0

@@ -25,6 +25,7 @@
 #using scripts\zm\_zm_perk_sleight_of_hand;
 #using scripts\zm\_zm_perk_staminup;
 #using scripts\zm\_zm_perk_mule_lick;
+#using scripts\zm\_zm_perk_vodka;
 
 
 //Westchief596

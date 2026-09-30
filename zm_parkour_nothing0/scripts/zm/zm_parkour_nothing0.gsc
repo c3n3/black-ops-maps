@@ -44,6 +44,7 @@
 #using scripts\zm\_zm_perk_sleight_of_hand;
 #using scripts\zm\_zm_perk_staminup;
 #using scripts\zm\_zm_perk_mule_lick;
+#using scripts\zm\_zm_perk_vodka;
 
 //Westchief596
 #using scripts\zm\_community_perk_collection;
@@ -71,7 +72,7 @@
 #precache( "fx", "fire/fx_fire_line_sm_evb" );
 #precache( "fx", "endgame_arrow_light" );
 #precache( "fx", "ambient_light" );
-#precache( "model", "p7_zm_vending_packapunch_on" );
+#precache( "model", "p7_zm_vending_packapunch" );
 
 // The safety-circle teleport uses the Giant's teleporter overlay; overlays must be registered during system init
 REGISTER_SYSTEM( "zm_parkour_nothing0", &safety_overlay_init, undefined )
@@ -80,9 +81,9 @@ function safety_overlay_init()
 {
 	visionset_mgr::register_info( "overlay", "zm_factory_teleport", VERSION_SHIP, 61, 1, true );
 
-	// Pack-a-Punch powerup: a shrunken PaP machine; in the regular drop pool, so as likely as an Insta-Kill
+	// Pack-a-Punch powerup: a shrunken PaP machine (p7_zm_vending_packapunch: the "_on" model isn't in the map's zone); in the regular drop pool, so as likely as an Insta-Kill
 	zm_powerups::register_powerup( "pap_powerup", &grab_pap_powerup, &setup_pap_powerup );
-	zm_powerups::add_zombie_powerup( "pap_powerup", "p7_zm_vending_packapunch_on", undefined, &zm_powerups::func_should_always_drop, POWERUP_ONLY_AFFECTS_GRABBER, !POWERUP_ANY_TEAM, !POWERUP_ZOMBIE_GRABBABLE );
+	zm_powerups::add_zombie_powerup( "pap_powerup", "p7_zm_vending_packapunch", undefined, &zm_powerups::func_should_always_drop, POWERUP_ONLY_AFFECTS_GRABBER, !POWERUP_ANY_TEAM, !POWERUP_ZOMBIE_GRABBABLE );
 }
 
 function setup_pap_powerup()
@@ -111,9 +112,13 @@ function grab_pap_powerup( player )
 
 function main()
 {
-	zm_usermap::main();
-	
+	// Must be set BEFORE zm_usermap::main(): its load::main() -> zm::init() -> zm_weapons::init() loads the weapon table
+	// right away, and zm_usermap only fills in zm_levelcommon_weapons.csv (every BO3 gun in the box) when this is unset
 	level._zombie_custom_add_weapons =&custom_add_weapons;
+
+	zm_usermap::main();
+
+	level thread wallbuys_before_first_round();
 	
 	//Setup the levels Zombie Zone Volumes
 	level.zones = [];
@@ -164,7 +169,7 @@ function main()
 	level thread dogs_match_zombie_health();
 	level thread void_door_dogs();
 	level thread perk_bottles();
-	level thread wunderfizz_map_perks_only();	// Wunderfizz only offers perks with a machine in the map
+	level thread wunderfizz_map_perks_only();	// Wunderfizz only offers perks with a machine in the map (not Vodka)
 	if ( isdefined( level.zombie_powerups["fire_sale"] ) )
 	{
 		level.zombie_powerups["fire_sale"].func_should_drop_with_regular_powerups = &fire_sale_can_drop;
@@ -1146,34 +1151,76 @@ function perk_bottles()
 	level thread zm_powerups::specific_powerup_drop( "pap_powerup", ( 0, 2629, 24 ), undefined, undefined, undefined, undefined, true );
 }
 
-// The community pack's Wunderfizz offers every loaded perk; keep only perks with a machine placed in the map
-function wunderfizz_map_perks_only()
+// Perks with a machine placed in the map, minus Vodka (you only get drunk by choice): what random perks may give
+function map_perks()
 {
-	level flag::wait_till( "initial_blackscreen_passed" );
-
 	on_map = [];
 	foreach ( machine in struct::get_array( "zm_perk_machine", "targetname" ) )
 	{
-		if ( isdefined( machine.script_noteworthy ) )
+		if ( isdefined( machine.script_noteworthy ) && machine.script_noteworthy !== level.vodka_perk && isdefined( level._custom_perks[machine.script_noteworthy] ) )
 		{
 			on_map[machine.script_noteworthy] = true;
 		}
 	}
+	return GetArrayKeys( on_map );
+}
+
+// The community pack's Wunderfizz offers every loaded perk, and stock free-perk bottles pick from every registered
+// perk: both are limited to map_perks()
+function wunderfizz_map_perks_only()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	level._custom_powerups["free_perk"].grab_powerup = &grab_free_map_perk;
 
 	if ( !isdefined( level._random_perk_machine_perk_list ) )
 	{
 		return;
 	}
 
+	allowed = map_perks();
 	kept = [];
 	foreach ( perk in level._random_perk_machine_perk_list )
 	{
-		if ( isdefined( on_map[perk] ) )
+		if ( IsInArray( allowed, perk ) )
 		{
 			kept[kept.size] = perk;
 		}
 	}
 	level._random_perk_machine_perk_list = kept;
+}
+
+// Stock free_perk_powerup, but the perk comes from map_perks()
+function grab_free_map_perk( player )
+{
+	foreach ( p in GetPlayers() )
+	{
+		if ( p laststand::player_is_in_laststand() || p.sessionstate == "spectator" )
+		{
+			continue;
+		}
+
+		choices = [];
+		foreach ( perk in map_perks() )
+		{
+			if ( !p HasPerk( perk ) && !p zm_perks::has_perk_paused( perk ) )
+			{
+				choices[choices.size] = perk;
+			}
+		}
+		if ( !choices.size )
+		{
+			p PlaySoundToPlayer( level.zmb_laugh_alias, p );	// no perks left to get
+			continue;
+		}
+
+		perk = array::random( choices );
+		p zm_perks::give_perk( perk );
+		if ( isdefined( level.perk_bought_func ) )
+		{
+			p [[ level.perk_bought_func ]]( perk );
+		}
+	}
 }
 
 // Fire sale can drop even before the box has moved (stock needs at least one box move)
@@ -1322,6 +1369,17 @@ function usermap_test_zone_init()
 	// Approach, walkway and island: no door of its own, it opens with z16
 	zm_zonemgr::add_adjacent_zone( "z16", "lighthouse", "enter_z16" );
 }	
+
+// Stock only fills level.active_zone_names once "begin_spawning" is set (the first round), and unitriggers (wall buys,
+// the box) only work in active zones. This map holds the first round back, so let spawn's wall buys work meanwhile.
+function wallbuys_before_first_round()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+	if ( !isdefined( level.active_zone_names ) )
+	{
+		level.active_zone_names = array( "start_zone" );
+	}
+}
 
 function custom_add_weapons()
 {

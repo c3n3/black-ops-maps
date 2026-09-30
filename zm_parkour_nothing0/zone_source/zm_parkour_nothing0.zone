@@ -11,6 +11,8 @@ include,hud_t7
 
 // Mule Lick perk (share/zone_source/mulelick_perk.zpkg: scripts, string, machine, bottle, HUD icon, fx)
 include,mulelick_perk
+// Vodka perk (share/zone_source/vodka_perk.zpkg: scripts, string, machine, bottle, HUD icon, fx)
+include,vodka_perk
 
 xmodel,skybox_default_day
 material,luts_t7_default
