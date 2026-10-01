@@ -23,6 +23,7 @@
 #using scripts\zm\_zm;
 #using scripts\zm\_zm_audio;
 #using scripts\zm\_zm_powerups;
+#using scripts\zm\_zm_spawner;
 #using scripts\zm\_zm_score;
 #using scripts\zm\_zm_ai_dogs;
 #using scripts\zm\_zm_perks;
@@ -65,6 +66,12 @@
 
 #using scripts\zm\zm_usermap;
 
+#precache( "string", "PARKOUR_HELP_FALLING" );
+#precache( "triggerstring", "ZOMBIE_WEAPONCOSTONLYFILL" );
+#precache( "triggerstring", "ZOMBIE_WEAPONCOSTONLYFILL_BGB_SECRET_SHOPPER" );
+#precache( "triggerstring", "ZOMBIE_WEAPONAMMOONLY" );
+#precache( "triggerstring", "ZOMBIE_WEAPONAMMOONLY_BGB_SECRET_SHOPPER" );
+#precache( "string", "PARKOUR_HELP_END_SWITCH" );
 #precache( "fx", "lighthouse_beam" );
 #precache( "fx", "void_pole_light" );
 #precache( "fx", "fire/fx_fire_ground_rubble_sm_50x50" );
@@ -86,9 +93,12 @@ function safety_overlay_init()
 	zm_powerups::add_zombie_powerup( "pap_powerup", "p7_zm_vending_packapunch", undefined, &zm_powerups::func_should_always_drop, POWERUP_ONLY_AFFECTS_GRABBER, !POWERUP_ANY_TEAM, !POWERUP_ZOMBIE_GRABBABLE );
 }
 
+// Stock powerup_setup calls a custom setup func INSTEAD of SetModel, so it has to set the model itself
 function setup_pap_powerup()
 {
+	self SetModel( "p7_zm_vending_packapunch" );
 	self SetScale( 0.2 );
+	self NotSolid();	// the machine model has collision; players have to walk into the powerup to grab it
 }
 
 // Pack-a-Punches whatever the collector is holding
@@ -116,9 +126,19 @@ function main()
 	// right away, and zm_usermap only fills in zm_levelcommon_weapons.csv (every BO3 gun in the box) when this is unset
 	level._zombie_custom_add_weapons =&custom_add_weapons;
 
+	// Wall-buy prompts: the server fills in the price (the same get_weapon_cost the purchase charges) instead of the
+	// client looking it up, which showed "Cost: 0" on some BO2 wall buys. Must be set before zm_weapons::init (it's
+	// a DEFAULT there), which also runs inside zm_usermap::main(). Prices themselves are unchanged.
+	level.weapon_cost_client_filled = false;
+
 	zm_usermap::main();
 
 	level thread wallbuys_before_first_round();
+
+	// Powerups from zombies killed on monster clip (the AI floors over the gaps) stay where the zombie died
+	zm_spawner::register_zombie_death_event_callback( &remember_death_spot );
+	level.custom_zombie_powerup_drop = &powerup_drop_at_death_spot;
+
 	
 	//Setup the levels Zombie Zone Volumes
 	level.zones = [];
@@ -180,6 +200,17 @@ function main()
 		level.zombie_powerup_array = array::randomize( level.zombie_powerup_array );
 	}
 
+	// Pack-a-Punch powerup and Double Points: one more entry each in the drop cycle = 2x as likely;
+	// Insta-Kill: two more = 3x
+	foreach ( name in array( "pap_powerup", "double_points", "insta_kill", "insta_kill" ) )
+	{
+		if ( IsInArray( level.zombie_powerup_array, name ) )
+		{
+			level.zombie_powerup_array[level.zombie_powerup_array.size] = name;
+		}
+	}
+	level.zombie_powerup_array = array::randomize( level.zombie_powerup_array );
+
 	level._effect["ambient_light"] = "ambient_light";
 	level thread ambient_light_switch();
 
@@ -195,7 +226,7 @@ function main()
 	level flag::init( "lighthouse_reached" );
 	level thread safety_circles_init();
 	level thread lighthouse_reached_watch();
-	level thread safety_sign();
+	callback::on_spawned( &help_text_watch );	// "When falling shoot green circles" / "Find the end switch"
 	callback::on_spawned( &safety_player_think );
 
 	// Falling below the paths leaves every zone volume; stock would laugh and kill the player 0.5 s later
@@ -244,16 +275,86 @@ function lighthouse_reached_watch()
 	}
 }
 
-function safety_sign()
+// Per-player help text (it replaced the start sign):
+//   on the spawn platform: "When falling shoot green circles", until they leave it or the game starts (entrance bought)
+//   at the lighthouse:     "Find the end switch", until the endgame starts
+function help_text_watch()
 {
-	sign = struct::get( "safety_sign", "targetname" );
-	if ( !isdefined( sign ) )
+	self endon( "disconnect" );
+	self notify( "help_text_watch" );
+	self endon( "help_text_watch" );
+	self endon( "death" );
+	self thread help_text_cleanup();
+
+	level flag::wait_till( "initial_blackscreen_passed" );
+	if ( level flag::get( "endgame_started" ) )
 	{
 		return;
 	}
 
-	level flag::wait_till( "initial_blackscreen_passed" );
-	make_use_trigger( sign.origin, 72, 96, "shoot the green circles for 'safety'." );
+	self help_text_show( &"PARKOUR_HELP_FALLING" );
+	while ( self on_spawn_platform() && !level flag::get( "endgame_started" ) && !level flag::get( "map_entrance_open" ) )
+	{
+		wait 0.25;
+	}
+	self help_text_clear();
+
+	while ( !self zm_zonemgr::entity_in_zone( "lighthouse", true ) )
+	{
+		if ( level flag::get( "endgame_started" ) )
+		{
+			return;
+		}
+		wait 0.5;
+	}
+	if ( !level flag::get( "endgame_started" ) )
+	{
+		self help_text_show( &"PARKOUR_HELP_END_SWITCH" );
+		level flag::wait_till( "endgame_started" );
+	}
+	self help_text_clear();
+}
+
+// The spawn deck (x -208..216, y -336..64, top z 16); falling off it counts as leaving
+function on_spawn_platform()
+{
+	o = self.origin;
+	return o[0] >= -216 && o[0] <= 224 && o[1] >= -344 && o[1] <= 72 && o[2] > -8 && o[2] < 200;
+}
+
+function help_text_show( text )
+{
+	self help_text_clear();
+	hud = NewClientHudElem( self );
+	hud.horzAlign = "center";
+	hud.vertAlign = "top";
+	hud.alignX = "center";
+	hud.alignY = "top";
+	hud.x = 0;
+	hud.y = 90;
+	hud.foreground = true;
+	hud.fontscale = 1.6;
+	hud.color = ( 1, 0.9, 0.55 );
+	hud.alpha = 1;
+	hud SetText( text );
+	self.help_text = hud;
+}
+
+function help_text_clear()
+{
+	if ( isdefined( self.help_text ) )
+	{
+		self.help_text Destroy();
+	}
+}
+
+// Death ends help_text_watch before it can clean up
+function help_text_cleanup()
+{
+	self endon( "disconnect" );
+	self endon( "help_text_watch" );
+	self waittill( "death" );
+	self help_text_clear();
 }
 
 function safety_player_think()
@@ -694,19 +795,21 @@ function void_door_dogs()
 // doorway, bridging every gap. Players only; it doesn't exist until the endgame starts.
 function endgame_path()
 {
-	path = GetEnt( "endgame_path", "targetname" );
-	if ( !isdefined( path ) )
+	// GetEntArray: Radiant can hold several "endgame_path" pieces (GetEnt fails when there's more than one)
+	pieces = GetEntArray( "endgame_path", "targetname" );
+	foreach ( piece in pieces )
 	{
-		return;
+		piece Hide();
+		piece NotSolid();
 	}
-
-	path Hide();
-	path NotSolid();
 
 	level flag::wait_till( "endgame_started" );
 
-	path Show();
-	path Solid();
+	foreach ( piece in pieces )
+	{
+		piece Show();
+		piece Solid();
+	}
 }
 
 // Endgame exit: a green arrow off the spawn deck's west edge, a drop platform ~1000 below it and a $500 ending.
@@ -1203,6 +1306,10 @@ function grab_free_map_perk( player )
 		choices = [];
 		foreach ( perk in map_perks() )
 		{
+			if ( perk === level.mule_lick_perk )
+			{
+				continue;	// free-perk bottles never give Mule Lick
+			}
 			if ( !p HasPerk( perk ) && !p zm_perks::has_perk_paused( perk ) )
 			{
 				choices[choices.size] = perk;
@@ -1379,6 +1486,48 @@ function wallbuys_before_first_round()
 	{
 		level.active_zone_names = array( "start_zone" );
 	}
+}
+
+// Stock picks a powerup's spot with GroundTrace straight down from the dead zombie; that ignores monster clip, so
+// a zombie killed on an AI floor over a gap dropped its powerup up to 300 units below. Remember where zombies die
+// and, when a drop lands straight below one of those spots, drop it at the death spot instead.
+function remember_death_spot( attacker )
+{
+	if ( !isdefined( level.recent_death_spots ) )
+	{
+		level.recent_death_spots = [];
+	}
+	kept = [];
+	foreach ( spot in level.recent_death_spots )
+	{
+		if ( GetTime() - spot.time < 2000 )
+		{
+			kept[kept.size] = spot;
+		}
+	}
+	spot = SpawnStruct();
+	spot.origin = self.origin;
+	spot.time = GetTime();
+	kept[kept.size] = spot;
+	level.recent_death_spots = kept;
+}
+
+function powerup_drop_at_death_spot( drop_point )
+{
+	if ( !isdefined( level.recent_death_spots ) )
+	{
+		return false;
+	}
+	foreach ( spot in level.recent_death_spots )
+	{
+		if ( Distance2DSquared( spot.origin, drop_point ) < 4 && spot.origin[2] - drop_point[2] > 8 && GetTime() - spot.time < 2000 )
+		{
+			ArrayRemoveValue( level.recent_death_spots, spot );	// so the re-drop below isn't moved again
+			level thread zm_powerups::powerup_drop( spot.origin );
+			return true;
+		}
+	}
+	return false;
 }
 
 function custom_add_weapons()

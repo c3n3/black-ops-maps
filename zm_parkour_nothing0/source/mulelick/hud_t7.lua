@@ -42,15 +42,15 @@ LUI.createMenu.T7Hud_zm_factory = function(controller)
 	if not CoD.ZMPerksFactory then
 		CoD.ZMPerksFactory =
 		{
-			quick_revive = "$blacktransparent",
-			doubletap2 = "$blacktransparent",
-			juggernaut = "$blacktransparent",
-			sleight_of_hand = "$blacktransparent",
-			dead_shot = "$blacktransparent",
+			quick_revive = "specialty_giant_quickrevive_zombies",
+			doubletap2 = "specialty_giant_doubletap_zombies",
+			juggernaut = "specialty_giant_juggernaut_zombies",
+			sleight_of_hand = "specialty_giant_fastreload_zombies",
+			dead_shot = "specialty_giant_ads_zombies",
 			phdflopper = "$blacktransparent",
-			marathon = "$blacktransparent",
-			additional_primary_weapon = "$blacktransparent",
-			widows_wine = "$blacktransparent",
+			marathon = "specialty_giant_marathon_zombies",
+			additional_primary_weapon = "specialty_giant_three_guns_zombies",
+			widows_wine = "specialty_giant_widows_wine_zombies",
 			tombstone = "$blacktransparent",
 			vultureaid	= "$blacktransparent",
 			whoswho	= "$blacktransparent",
@@ -113,7 +113,8 @@ LUI.createMenu.T7Hud_zm_factory = function(controller)
 			windrunner							="perk_icon_windrunner",
 			winters_wail							="perk_icon_winters_wail",
 			zombshell							="perk_icon_zombshell",
-			mule_lick							="perk_shader_mulelick"
+			mule_lick							="perk_shader_mulelick",
+			vodka								="perk_shader_vodka"
 
 
 		}

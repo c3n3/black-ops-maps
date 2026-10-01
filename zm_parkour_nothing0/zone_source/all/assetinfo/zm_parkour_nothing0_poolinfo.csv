@@ -7,8 +7,8 @@ xmodel,10240,636
 xmodelmesh,34816,906
 material,20480,1714
 computeshaderset,256,0
-techset,1024,98
-image,49152,2849
+techset,1024,97
+image,49152,2848
 sound,32,1
 sound_patch,16,0
 col_map,2,1
@@ -37,7 +37,7 @@ customizationtable,8,0
 customizationtable_feimages,8,0
 customizationtablecolor,1024,0
 snddriverglobals,1,0
-fx,1875,287
+fx,1875,286
 tagfx,64,0
 klf,64,5
 impactsfxtable,256,3

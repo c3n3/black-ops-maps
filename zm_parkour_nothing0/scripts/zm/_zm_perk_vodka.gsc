@@ -69,6 +69,7 @@ function __init__()
 	clientfield::register( "toplayer", VODKA_JINGLE_CLIENTFIELD, VERSION_SHIP, 4, "int" );	// drinks 0..10 (0 = silent)
 
 	level.vodka_perk = PERK_VODKA;	// the map script leaves it out of free perks and the Wunderfizz
+	zm_perks::register_perk_damage_override_func( &vodka_damage_override );	// damage reduction, see vodka_damage_override()
 	callback::on_spawned( &vodka_reset );
 	level thread vodka_machine_trigger();
 }
@@ -154,20 +155,41 @@ function vodka_reset()
 
 function vodka_machine_trigger()
 {
+	// This starts from __init__, before zm::init has created the flag: waiting on a flag that doesn't exist yet
+	// kills the thread, which left the stock machine running (cost 0, and the pack's "Remove Perk" prompt)
+	while ( !level flag::exists( "initial_blackscreen_passed" ) )
+	{
+		WAIT_SERVER_FRAME;
+	}
 	level flag::wait_till( "initial_blackscreen_passed" );
 
-	stock = undefined;
-	foreach ( trig in GetEntArray( "zombie_vending", "targetname" ) )
+	// Every Vodka machine in the map (there can be several): wait for the stock triggers, then take each one over
+	stocks = [];
+	for ( i = 0; i < 100 && !stocks.size; i++ )	// the stock perk triggers may still be spawning
 	{
-		if ( trig.script_noteworthy === PERK_VODKA )
+		wait 0.1;
+		foreach ( trig in GetEntArray( "zombie_vending", "targetname" ) )
 		{
-			stock = trig;
+			if ( trig.script_noteworthy === PERK_VODKA )
+			{
+				stocks[stocks.size] = trig;
+			}
 		}
 	}
-	if ( !isdefined( stock ) )
+	if ( !stocks.size )
 	{
 		return;	// no Vodka machine in the map
 	}
+	foreach ( stock in stocks )
+	{
+		stock thread vodka_take_over();
+	}
+}
+
+// One Vodka machine: disable its stock trigger (and the pack's Remove Perk prompt) and run our own trigger there
+function vodka_take_over()
+{
+	stock = self;
 	stock TriggerEnable( false );
 	stock thread vodka_no_perk_return();
 
@@ -212,8 +234,13 @@ function vodka_machine_trigger()
 //   round 10:  4000   (~361 a round)
 //   round 18: 12000   (1000 a round)
 //   round 25: 30000   (~2571 a round), and 30000 from then on
-function vodka_payout( round = level.round_number )
+function vodka_payout()
 {
+	round = level.round_number;
+	if ( !isdefined( round ) || round < 1 )
+	{
+		round = 1;
+	}
 	rounds = array( 1, 10, 18, 25 );
 	points = array( 750, 4000, 12000, 30000 );
 
@@ -231,6 +258,45 @@ function vodka_payout( round = level.round_number )
 		}
 	}
 	return points[points.size - 1];
+}
+
+// Damage reduction by drinks, straight lines between: 1 drink 5%, 3 drinks 10%, 5 drinks 25%, 10 drinks 75%
+//   (2: 7.5%, 4: 17.5%, 6: 35%, 7: 45%, 8: 55%, 9: 65%)
+// It's a stock perk damage override: those chain (each gets the damage the previous ones left), so it stacks with
+// the other perks' reductions instead of replacing them. The map's own scripted downs/kills (MOD_UNKNOWN, e.g. the
+// bottom-of-the-sky down) and suicide / hurt volumes are left alone.
+function vodka_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime )
+{
+	if ( !self HasPerk( PERK_VODKA ) || !isdefined( self.vodka_level ) || self.vodka_level < 1 || iDamage <= 0 )
+	{
+		return undefined;
+	}
+	if ( sMeansOfDeath === "MOD_UNKNOWN" || sMeansOfDeath === "MOD_SUICIDE" || sMeansOfDeath === "MOD_TRIGGER_HURT" )
+	{
+		return undefined;
+	}
+	damage = Int( iDamage * ( 1 - vodka_damage_reduction( self.vodka_level ) ) + 0.5 );
+	return Int( Max( damage, 1 ) );
+}
+
+function vodka_damage_reduction( drinks )
+{
+	levels = array( 1, 3, 5, 10 );
+	reduction = array( 0.05, 0.10, 0.25, 0.75 );
+
+	if ( drinks <= levels[0] )
+	{
+		return reduction[0];
+	}
+	for ( i = 1; i < levels.size; i++ )
+	{
+		if ( drinks <= levels[i] )
+		{
+			f = Float( drinks - levels[i - 1] ) / Float( levels[i] - levels[i - 1] );
+			return reduction[i - 1] + f * ( reduction[i] - reduction[i - 1] );
+		}
+	}
+	return reduction[reduction.size - 1];
 }
 
 // The round's payout plus 15% for every Vodka this player has already drunk (counted up to 10: at most x2.5)

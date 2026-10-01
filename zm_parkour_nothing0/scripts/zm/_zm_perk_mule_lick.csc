@@ -12,7 +12,7 @@
 
 // MULE LICK (design 11): client side. HUD icon clientfield (hud_t7.lua key "mule_lick") and the red machine glow.
 
-#define PERK_MULE_LICK					"specialty_whoswho"
+#define PERK_MULE_LICK					"specialty_nokillstreakreticle"
 #define MULE_LICK_CLIENTFIELD			"hudItems.perks.mule_lick"
 #define MULE_LICK_MACHINE_LIGHT_FX		"mulelick_light"
 #define MULE_LICK_FX_FILE				"zm_parkour_nothing0/mulelick"

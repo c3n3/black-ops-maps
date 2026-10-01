@@ -13,6 +13,8 @@ include,hud_t7
 include,mulelick_perk
 // Vodka perk (share/zone_source/vodka_perk.zpkg: scripts, string, machine, bottle, HUD icon, fx)
 include,vodka_perk
+// Help text (design 15)
+localize,parkour_help
 
 xmodel,skybox_default_day
 material,luts_t7_default

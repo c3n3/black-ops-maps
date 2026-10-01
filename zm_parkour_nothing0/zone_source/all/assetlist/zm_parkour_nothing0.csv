@@ -5245,6 +5245,7 @@ material,wc/mtl_t6_wpn_lmg_hamr_wall_chalk
 material,wc/mtl_t6_wpn_lmg_lsat_wall_chalk
 material,wc/mtl_t6_wpn_lmg_mk48_wall_chalk
 material,wc/mtl_t6_wpn_lmg_rpd_wall_chalk
+material,wc/mtl_t6_wpn_pistol_kard_wall_chalk
 material,wc/mtl_t6_wpn_shotty_870mcs_wall_chalk
 material,wc/mtl_t6_wpn_shotty_olympia_wall_chalk
 material,wc/mtl_t6_wpn_smg_mp5_wall_chalk
@@ -5252,7 +5253,6 @@ material,wc/mtl_t6_wpn_smg_vector_wall_chalk
 material,wc/shadowcaster
 material,wc/t7_acrylic_red_flake
 material,wc/t7_brick_worn_red
-material,wc/t7_decal_blood_splatter_01
 material,wc/t7_glass_green_opaque_01
 material,wc/t7_metal_diamond_plate_worn_wet
 material,wc/t7_metal_worn_iron_dark
@@ -5294,7 +5294,6 @@ techset,mc/sky_latlong_hdr#e6142445
 techset,warp_aberration_refract_screen#da7372ff
 techset,wc/lit#882572b8
 techset,wc/lit_advanced#882572b8
-techset,wc/lit_decal_reveal#882572b8
 techset,wc/lit_detail#882572b8
 techset,wc/lit_emissive_scroll_transparent#882572b8
 techset,wc/lit_emissive_transparent#882572b8
@@ -6345,6 +6344,7 @@ image,i_t6_wpn_pistol_kard_n
 image,i_t6_wpn_pistol_kard_o
 image,i_t6_wpn_pistol_kard_r
 image,i_t6_wpn_pistol_kard_s
+image,i_t6_wpn_pistol_kard_wall_chalk_c
 image,i_t6_wpn_pistol_m1911_camo_c
 image,i_t6_wpn_pistol_m1911_camo_g
 image,i_t6_wpn_pistol_m1911_camo_n
@@ -6642,8 +6642,6 @@ image,i_t7_acrylic_red_flake_g
 image,i_t7_brick_worn_dirty_red_n
 image,i_t7_brick_worn_red_c
 image,i_t7_cloth_leather_white_c
-image,i_t7_decal_blood_grunge_01_n
-image,i_t7_decal_blood_splatter_01_r
 image,i_t7_decal_damage_plywood_edge_dirty_c
 image,i_t7_decal_damage_plywood_edge_n
 image,i_t7_decal_grunge_burnt_stain_03_c
@@ -8137,7 +8135,6 @@ fx,fire/fx_fire_ground_rubble_50x50
 fx,fire/fx_fire_ground_rubble_sm_50x50
 fx,fire/fx_fire_line_sm_evb
 fx,light/fx_light_barrel_fire_factory_zmb_strong
-fx,light/fx_light_fire_flicker_noshad_small
 fx,lighthouse_beam
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_flesh_impact_up
 fx,skye_efx/t6_efx/fx_t6_raygun_mark2_impact_up

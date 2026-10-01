@@ -3,6 +3,7 @@
 #using scripts\shared\array_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\clientfield_shared;
+#using scripts\shared\laststand_shared;
 #using scripts\shared\system_shared;
 #using scripts\shared\util_shared;
 
@@ -22,10 +23,11 @@
 // Mule Kick + Mule Lick = the normal 2 guns.
 // Design 11: a full custom perk (CYO template layout). Machine: DEVRAW Dew's model re-textured dark red with a
 // "MULE LICK" sign; bottle: BO4 bottle with the Mule Lick label; HUD icon via hud_t7.lua (mule_lick).
-// It borrows the engine perk "specialty_whoswho" (the community perk collection's Tombstone Soda uses
-// specialty_tombstone, so Mule Lick can't).
+// It borrows the engine perk "specialty_nokillstreakreticle" (MP-only, unused by zombies). Not specialty_tombstone
+// (the community pack's Tombstone Soda uses it) and not specialty_whoswho: stock _zm.gsc treats any downed player
+// with lives > 0 and Who's Who as a Who's Who down and burns the life, which broke solo Quick Revive.
 
-#define PERK_MULE_LICK						"specialty_whoswho"
+#define PERK_MULE_LICK						"specialty_nokillstreakreticle"
 #define MULE_LICK_COST						500
 #define MULE_LICK_ALIAS						"mule_lick"						// hud_t7.lua perk list key
 #define MULE_LICK_CLIENTFIELD				"hudItems.perks.mule_lick"
@@ -37,6 +39,7 @@
 #define MULE_LICK_FX_FILE					"zm_parkour_nothing0/mulelick"
 #define MULE_LICK_JINGLE					"mus_perks_mulelick_jingle"
 #define MULE_LICK_STING						"mus_perks_mulelick_sting"
+#define MULE_LICK_SOLO_REVIVES				3		// stock's solo Quick Revive limit (level.solo_lives_given)
 #define MULE_LICK_BINDS						2		// perks kept for good after Mule Lick
 
 #precache( "string", "MULELICK_PERK_MULE_LICK_STRING" );
@@ -48,6 +51,7 @@ REGISTER_SYSTEM( "zm_perk_mule_lick", &__init__, undefined )
 
 function __init__()
 {
+	level.mule_lick_perk = PERK_MULE_LICK;	// the map script leaves it out of free-perk bottles
 	zm_perks::register_perk_basic_info( PERK_MULE_LICK, "mulelick", MULE_LICK_COST, &"MULELICK_PERK_MULE_LICK_STRING", GetWeapon( MULE_LICK_BOTTLE_WEAPON ) );
 	zm_perks::register_perk_precache_func( PERK_MULE_LICK, &mule_lick_precache );
 	zm_perks::register_perk_clientfields( PERK_MULE_LICK, &mule_lick_register_clientfield, &mule_lick_set_clientfield );
@@ -122,7 +126,45 @@ function give_mule_lick()
 	{
 		self.mule_lick_owned = true;
 		self thread mule_lick_bind_next_perk();
+		self thread mule_lick_solo_revive_refill();
 	}
+}
+
+// Solo Quick Revive is never retained by stock (it's taken on every down and its life used), so when Mule Lick has
+// bound it, give it back after each self-revive, until stock's 3 solo lives have all been handed out
+function mule_lick_solo_revive_refill()
+{
+	self endon( "disconnect" );
+
+	while ( 1 )
+	{
+		self waittill( "player_downed" );
+		while ( self laststand::player_is_in_laststand() )
+		{
+			wait 0.1;
+		}
+		if ( self.sessionstate != "playing" || !zm_perks::use_solo_revive() || self HasPerk( PERK_QUICK_REVIVE ) )
+		{
+			continue;	// bled out, co-op, or already has it
+		}
+		if ( !isdefined( self.mule_lick_bound ) || !IsInArray( self.mule_lick_bound, PERK_QUICK_REVIVE ) )
+		{
+			continue;
+		}
+		if ( mule_lick_solo_revives_used_up() )
+		{
+			self IPrintLnBold( "Mule Lick: Quick Revive is used up (" + MULE_LICK_SOLO_REVIVES + "/" + MULE_LICK_SOLO_REVIVES + ")" );
+			continue;
+		}
+		wait 0.5;
+		self zm_perks::give_perk( PERK_QUICK_REVIVE, false );
+		self IPrintLnBold( "Mule Lick: Quick Revive is back (" + level.solo_lives_given + "/" + MULE_LICK_SOLO_REVIVES + ")" );
+	}
+}
+
+function mule_lick_solo_revives_used_up()
+{
+	return zm_perks::use_solo_revive() && isdefined( level.solo_lives_given ) && level.solo_lives_given >= MULE_LICK_SOLO_REVIVES;
 }
 
 // Mule Lick is never lost (it is retained), so this only runs if something force-removes it
@@ -196,6 +238,10 @@ function mule_lick_restore_on_spawn()
 	{
 		if ( isdefined( perk ) && !self HasPerk( perk ) )
 		{
+			if ( perk == PERK_QUICK_REVIVE && mule_lick_solo_revives_used_up() )
+			{
+				continue;	// solo: stock's 3 lives are gone
+			}
 			self zm_perks::give_perk( perk, false );
 		}
 	}
