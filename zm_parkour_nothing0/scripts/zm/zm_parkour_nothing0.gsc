@@ -133,7 +133,11 @@ function main()
 
 	zm_usermap::main();
 
+	// Starting pistol: BO2's Tac-45 instead of the stock MR6 (zm::init sets level.start_weapon inside zm_usermap::main)
+	level.start_weapon = GetWeapon( "t6_tac45" );
+
 	level thread wallbuys_before_first_round();
+	level thread powerup_constant_rate();
 
 	// Powerups from zombies killed on monster clip (the AI floors over the gaps) stay where the zombie died
 	zm_spawner::register_zombie_death_event_callback( &remember_death_spot );
@@ -200,9 +204,8 @@ function main()
 		level.zombie_powerup_array = array::randomize( level.zombie_powerup_array );
 	}
 
-	// Pack-a-Punch powerup and Double Points: one more entry each in the drop cycle = 2x as likely;
-	// Insta-Kill: two more = 3x
-	foreach ( name in array( "pap_powerup", "double_points", "insta_kill", "insta_kill" ) )
+	// Pack-a-Punch powerup: one more entry in the drop cycle = 2x as likely; Double Points and Insta-Kill: two more = 3x
+	foreach ( name in array( "pap_powerup", "double_points", "double_points", "insta_kill", "insta_kill" ) )
 	{
 		if ( IsInArray( level.zombie_powerup_array, name ) )
 		{
@@ -744,7 +747,7 @@ function start_endgame( player )
 // Endgame: the odd dog mixed into the horde, from the dog locations of every (now active) zone
 function endgame_dogs()
 {
-	zones = array( "z10", "z11", "z12", "z13", "z14", "z15", "z16" );
+	zones = array( "z10p0", "z10p5", "z11", "z12", "z13", "z14", "z15", "z16" );
 
 	// Zombie spawning paused (stock "spawn_zombies" flag) while 100 dogs come in at the zombie spawn rate
 	level flag::clear( "spawn_zombies" );
@@ -788,7 +791,7 @@ function void_door_dogs()
 {
 	level flag::wait_till( "initial_blackscreen_passed" );	// zone flags exist by now
 	level flag::wait_till( "enter_z10" );
-	spawn_dogs_now( 10, array( "z10" ) );
+	spawn_dogs_now( 10, array( "z10p0", "z10p5" ) );
 }
 
 // Endgame path: a glowing red see-through strip along the centre line from the spawn deck to the lighthouse
@@ -1023,7 +1026,7 @@ function zone_order( zone_name )
 {
 	if ( !isdefined( level.zone_chain ) )
 	{
-		level.zone_chain = array( "start_zone", "z1", "z2", "z3", "z4", "z5", "z10", "z11", "z12", "z13", "z14", "z15", "z16", "lighthouse" );
+		level.zone_chain = array( "start_zone", "z1", "z2", "z3", "z4", "z5", "z10p0", "z10p5", "z11", "z12", "z13", "z14", "z15", "z16", "lighthouse" );
 	}
 	for ( i = 0; i < level.zone_chain.size; i++ )
 	{
@@ -1400,6 +1403,7 @@ function endless_reset_spawn_count()
 // Same difficulty updates the stock round_think does between rounds, without ending the round
 function endless_next_round()
 {
+	level.powerup_drop_count = 0;	// stock's per-round drop cap (4) only resets when a real round starts
 	zm::set_round_number( 1 + zm::get_round_number() );
 	SetRoundsPlayed( zm::get_round_number() );
 	endless_update_move_speed();
@@ -1466,9 +1470,12 @@ function usermap_test_zone_init()
 		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
 	}
 
-	// z6-z9 were cut: the Void (z10) follows z5 (its door, debris9, still sets enter_z10)
-	zm_zonemgr::add_adjacent_zone( "z5", "z10", "enter_z10" );
-	for ( i = 11; i <= 16; i++ )
+	// z6-z9 were cut: the Void follows z5 (its door, debris9, still sets enter_z10). The Void is split in two
+	// halves, z10p0 (spawn side) and z10p5, which open together with that door
+	zm_zonemgr::add_adjacent_zone( "z5", "z10p0", "enter_z10" );
+	zm_zonemgr::add_adjacent_zone( "z10p0", "z10p5", "enter_z10" );
+	zm_zonemgr::add_adjacent_zone( "z10p5", "z11", "enter_z11" );
+	for ( i = 12; i <= 16; i++ )
 	{
 		zm_zonemgr::add_adjacent_zone( "z" + ( i - 1 ), "z" + i, "enter_z" + i );
 	}
@@ -1528,6 +1535,29 @@ function powerup_drop_at_death_spot( drop_point )
 		}
 	}
 	return false;
+}
+
+// Stock makes every powerup drop need 14% more points than the last: its watcher does
+// zombie_powerup_drop_increment *= 1.14 right before using it. Make that growth 8% instead: keep the stored value
+// at (the increment we want next) / 1.14, and when stock's multiply shows up (a drop just happened), grow the
+// wanted increment by 8%. Starts at stock's 2000.
+function powerup_constant_rate()
+{
+	want = 2000;
+	level.zombie_vars["zombie_powerup_drop_increment"] = want / 1.14;
+	while ( 1 )
+	{
+		wait 0.05;
+		if ( level.zombie_vars["zombie_powerup_drop_increment"] > want / 1.14 + 0.5 )
+		{
+			want *= 1.08;	// a drop was earned: the next one needs 8% more points
+			level.zombie_vars["zombie_powerup_drop_increment"] = want / 1.14;
+		}
+		else if ( level.zombie_vars["zombie_powerup_drop_increment"] != want / 1.14 )
+		{
+			level.zombie_vars["zombie_powerup_drop_increment"] = want / 1.14;
+		}
+	}
 }
 
 function custom_add_weapons()

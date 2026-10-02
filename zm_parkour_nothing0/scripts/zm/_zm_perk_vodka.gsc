@@ -32,6 +32,7 @@
 #define VODKA_VIGNETTE_START				5		// darkness closes in from this many drinks
 #define VODKA_JINGLE_START					3		// the jingle loops for the drinker from this many drinks
 #define VODKA_JINGLE_CLIENTFIELD			"vodka_jingle"
+#define VODKA_PLAYER_SCALE					0.08	// payout -8% for every player past the first
 #define VODKA_BONUS_PER_DRINK				0.15	// payout bonus per Vodka already drunk (up to VODKA_MAX_LEVEL)
 #define VODKA_CLIENTFIELD					"hudItems.perks.vodka"
 #define VODKA_BOTTLE_WEAPON					"zombie_perk_bottle_vodka"
@@ -229,12 +230,21 @@ function vodka_take_over()
 	}
 }
 
-// Payout by round: straight lines between these points (slow early, steep late), rounded to $50, capped at 30000
+// The machine's payout this round for this many players (before the per-drink bonus): the round value
+// below, -8% per extra player (2 players x0.92, 3 x0.84, 4 x0.76), rounded to $50
+function vodka_payout()
+{
+	scale = 1 - VODKA_PLAYER_SCALE * ( GetPlayers().size - 1 );
+	v = vodka_round_value() * Max( scale, 0 );
+	return Int( Floor( v / 50 + 0.5 ) ) * 50;
+}
+
+// Payout by round: straight lines between these points (slow early, steeper late), rounded to $50, capped at 20000
 //   round  1:   750
 //   round 10:  4000   (~361 a round)
 //   round 18: 12000   (1000 a round)
-//   round 25: 30000   (~2571 a round), and 30000 from then on
-function vodka_payout()
+//   round 25: 20000   (~1143 a round), and 20000 from then on
+function vodka_round_value()
 {
 	round = level.round_number;
 	if ( !isdefined( round ) || round < 1 )
@@ -242,7 +252,7 @@ function vodka_payout()
 		round = 1;
 	}
 	rounds = array( 1, 10, 18, 25 );
-	points = array( 750, 4000, 12000, 30000 );
+	points = array( 750, 4000, 12000, 20000 );
 
 	if ( round <= rounds[0] )
 	{
