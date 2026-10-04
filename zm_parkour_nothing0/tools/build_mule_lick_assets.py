@@ -187,7 +187,7 @@ def build_sounds_strings_zone():
     (BO3 / "share" / "raw" / "english" / "localizedstrings" / "mulelick_perk.str").write_text(
         'VERSION             "1"\r\nCONFIG              "C:\\projects\\cod\\t7\\bin\\StringEd.cfg"\r\nFILENOTES           ""\r\n\r\n'
         'REFERENCE           MULE_LICK_STRING\r\n'
-        'LANG_ENGLISH     \t"Hold ^3[{+activate}]^7 for Mule Lick [Cost: &&1]\\n^1-1 gun slot. Your next 2 perks are never lost."\r\n\r\n'
+        'LANG_ENGLISH     \t"Hold ^3[{+activate}]^7 for Mule Lick [Free]\\n^1-1 gun slot. Your next 4 perks (not Vodka) are never lost."\r\n\r\n'
         'ENDMARKER\r\n', encoding="utf-8", newline="")
 
     (BO3 / "share" / "zone_source" / "mulelick_perk.zpkg").write_text(

@@ -5,10 +5,10 @@ destructibledef,128,0
 xanim,25000,2767
 xmodel,10240,636
 xmodelmesh,34816,906
-material,20480,1714
+material,20480,1717
 computeshaderset,256,0
 techset,1024,97
-image,49152,2848
+image,49152,2851
 sound,32,1
 sound_patch,16,0
 col_map,2,1

@@ -1,5 +1,6 @@
 #using scripts\codescripts\struct;
 
+#using scripts\shared\aat_shared;
 #using scripts\shared\array_shared;
 #using scripts\shared\callbacks_shared;
 #using scripts\shared\clientfield_shared;
@@ -101,19 +102,29 @@ function setup_pap_powerup()
 	self NotSolid();	// the machine model has collision; players have to walk into the powerup to grab it
 }
 
-// Pack-a-Punches whatever the collector is holding
+// Pack-a-Punches whatever the collector is holding (no special ammo type). Already Pack-a-Punched: re-packs it, i.e. a
+// new random special ammo type (never the one it has), and refills it.
 function grab_pap_powerup( player )
 {
 	weapon = player GetCurrentWeapon();
-	if ( !zm_weapons::can_upgrade_weapon( weapon ) || zm_weapons::is_weapon_upgraded( weapon ) )
+	if ( zm_weapons::is_weapon_upgraded( weapon ) )
+	{
+		if ( zm_weapons::weapon_supports_aat( weapon ) )
+		{
+			player aat::acquire( weapon );
+			player GiveMaxAmmo( weapon );
+		}
+		return;
+	}
+	if ( !zm_weapons::can_upgrade_weapon( weapon ) )
 	{
 		return;
 	}
 
 	upgraded = zm_weapons::get_upgrade_weapon( weapon );
 	player TakeWeapon( weapon );
-	player zm_weapons::weapon_give( upgraded, true, false, true, true );
-	player GiveMaxAmmo( upgraded );
+	upgraded = player zm_weapons::weapon_give( upgraded, true, false, true, true );
+	player GiveMaxAmmo( upgraded );	// first pack: no special ammo type (that comes with a re-pack)
 }
 
 //*****************************************************************************
@@ -137,7 +148,9 @@ function main()
 	level.start_weapon = GetWeapon( "t6_tac45" );
 
 	level thread wallbuys_before_first_round();
+	level thread hud_round_at_start();
 	level thread powerup_constant_rate();
+	level thread void_dogs();	// a player in the Void (before the endgame): dogs at 1/10 the zombie spawn rate
 
 	// Powerups from zombies killed on monster clip (the AI floors over the gaps) stay where the zombie died
 	zm_spawner::register_zombie_death_event_callback( &remember_death_spot );
@@ -162,7 +175,7 @@ function main()
 
 	level.pathdist_type = PATHDIST_ORIGINAL;
 
-	zombie_utility::set_zombie_var( "zombie_spawn_delay", 2.0, true );
+	zombie_utility::set_zombie_var( "zombie_spawn_delay", 2.25, true );
 	zombie_utility::set_zombie_var( "zombie_between_round_time", 10 );
 	level.round_prestart_func = &wait_for_map_entrance;	// round 1 starts when the $0 spawn debris is bought
 	level.func_get_zombie_spawn_delay = &endless_get_zombie_spawn_delay;
@@ -607,6 +620,13 @@ function void_campfires()
 	foreach ( fire in level.void_campfires )
 	{
 		fire thread void_campfire_think();
+	}
+
+	// 10% of the Void's campfires start lit (random each game)
+	lit = array::randomize( level.void_campfires );
+	for ( i = 0; i < Int( lit.size * 0.1 + 0.5 ); i++ )
+	{
+		lit[i] notify( "light_campfire" );
 	}
 }
 
@@ -1253,8 +1273,8 @@ function perk_bottles()
 		level thread zm_powerups::specific_powerup_drop( "free_perk", spot, undefined, undefined, undefined, undefined, true );
 	}
 
-	// z2's middle gap: equidistant (~148) from the octagons at (0,2480) and (+-128,2704), over empty air
-	level thread zm_powerups::specific_powerup_drop( "pap_powerup", ( 0, 2629, 24 ), undefined, undefined, undefined, undefined, true );
+	// The Void's centre, in front of (south of) the pole-light switch at (0,8972)
+	level thread zm_powerups::specific_powerup_drop( "pap_powerup", ( 0, 8910, 24 ), undefined, undefined, undefined, undefined, true );
 }
 
 // Perks with a machine placed in the map, minus Vodka (you only get drunk by choice): what random perks may give
@@ -1431,28 +1451,22 @@ function endless_update_move_speed()
 }
 
 // Stock spawn delay decay, but always from a 2.0 base regardless of player count
+// Spawn delay by round: 2.25 s at round 1, shrinking by the same factor every round to stock's minimum 0.1 s at
+// round 50 ((0.1 / 2.25) ^ (1/49) ~ 0.9384 a round, ~6% faster each round), 0.1 s after that. The endgame still
+// divides by 4 (never below one server frame).
 function endless_get_zombie_spawn_delay( n_round )
 {
-	if ( n_round > 60 )
+	n = Int( Min( Max( n_round, 1 ), 50 ) ) - 1;
+	n_delay = 2.25;
+	for ( i = 0; i < n; i++ )
 	{
-		n_round = 60;
+		n_delay *= 0.9384355;
 	}
-
-	n_delay = 2.0;
-	for ( i = 1; i < n_round; i++ )
-	{
-		n_delay *= 0.95;
-
-		if ( n_delay <= 0.1 )
-		{
-			n_delay = 0.1;
-			break;
-		}
-	}
+	n_delay = Max( n_delay, 0.1 );
 
 	if ( IS_TRUE( level.endgame_active ) )
 	{
-		n_delay /= 4;
+		n_delay = Max( n_delay / 4, 0.05 );
 	}
 
 	return n_delay;
@@ -1483,6 +1497,19 @@ function usermap_test_zone_init()
 	// Approach, walkway and island: no door of its own, it opens with z16
 	zm_zonemgr::add_adjacent_zone( "z16", "lighthouse", "enter_z16" );
 }	
+
+// The HUD's round counter is only set by stock when the first round starts (after the entrance is bought); until then
+// it can show a stale number (e.g. from a previous match in the same session). Show the real round from the start.
+function hud_round_at_start()
+{
+	while ( !level flag::exists( "initial_blackscreen_passed" ) )
+	{
+		WAIT_SERVER_FRAME;
+	}
+	SetRoundsPlayed( level.round_number );
+	level flag::wait_till( "initial_blackscreen_passed" );
+	SetRoundsPlayed( level.round_number );
+}
 
 // Stock only fills level.active_zone_names once "begin_spawning" is set (the first round), and unitriggers (wall buys,
 // the box) only work in active zones. This map holds the first round back, so let spawn's wall buys work meanwhile.
@@ -1556,6 +1583,33 @@ function powerup_constant_rate()
 		else if ( level.zombie_vars["zombie_powerup_drop_increment"] != want / 1.14 )
 		{
 			level.zombie_vars["zombie_powerup_drop_increment"] = want / 1.14;
+		}
+	}
+}
+
+// While any player is in the Void (z10p0 / z10p5) and the endgame hasn't started, a dog comes from the Void's dog
+// spots every 10 zombie spawn delays (1/10 the zombie rate). Paused while zombie spawning is paused; the endgame has
+// its own dogs (endgame_dogs).
+function void_dogs()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+	level endon( "endgame_started" );
+	zones = array( "z10p0", "z10p5" );
+
+	while ( !level flag::get( "endgame_started" ) )
+	{
+		wait level.zombie_vars["zombie_spawn_delay"] * 10;
+		if ( !level flag::get( "spawn_zombies" ) )
+		{
+			continue;
+		}
+		foreach ( zone in zones )
+		{
+			if ( zm_zonemgr::any_player_in_zone( zone ) )
+			{
+				spawn_one_dog( zones );
+				break;
+			}
 		}
 	}
 }

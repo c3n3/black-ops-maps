@@ -5239,9 +5239,10 @@ material,vodka_vignette_7
 material,vodka_vignette_8
 material,vodka_vignette_9
 material,wc/mtl_endgame_path_red
+material,wc/mtl_t6_wpn_ar_m14_wall_chalk
 material,wc/mtl_t6_wpn_ar_scarh_wall_chalk
+material,wc/mtl_t6_wpn_ar_type95_wall_chalk
 material,wc/mtl_t6_wpn_ar_xm8_wall_chalk
-material,wc/mtl_t6_wpn_lmg_hamr_wall_chalk
 material,wc/mtl_t6_wpn_lmg_lsat_wall_chalk
 material,wc/mtl_t6_wpn_lmg_mk48_wall_chalk
 material,wc/mtl_t6_wpn_lmg_rpd_wall_chalk
@@ -5249,7 +5250,9 @@ material,wc/mtl_t6_wpn_pistol_kard_wall_chalk
 material,wc/mtl_t6_wpn_shotty_870mcs_wall_chalk
 material,wc/mtl_t6_wpn_shotty_olympia_wall_chalk
 material,wc/mtl_t6_wpn_smg_mp5_wall_chalk
+material,wc/mtl_t6_wpn_smg_pdw57_wall_chalk
 material,wc/mtl_t6_wpn_smg_vector_wall_chalk
+material,wc/mtl_t6_wpn_sniper_svu_wall_chalk
 material,wc/shadowcaster
 material,wc/t7_acrylic_red_flake
 material,wc/t7_brick_worn_red
@@ -6111,6 +6114,7 @@ image,i_t6_wpn_ar_m14_camo_n
 image,i_t6_wpn_ar_m14_camo_o
 image,i_t6_wpn_ar_m14_camo_r
 image,i_t6_wpn_ar_m14_camo_s
+image,i_t6_wpn_ar_m14_wall_chalk_c
 image,i_t6_wpn_ar_m16_camo1_c
 image,i_t6_wpn_ar_m16_camo1_g
 image,i_t6_wpn_ar_m16_camo1_n
@@ -6153,6 +6157,7 @@ image,i_t6_wpn_ar_type95_camo1_n
 image,i_t6_wpn_ar_type95_camo1_o
 image,i_t6_wpn_ar_type95_camo1_r
 image,i_t6_wpn_ar_type95_camo1_s
+image,i_t6_wpn_ar_type95_wall_chalk_c
 image,i_t6_wpn_ar_x95l_alpha_c
 image,i_t6_wpn_ar_x95l_alpha_g
 image,i_t6_wpn_ar_x95l_alpha_n
@@ -6237,7 +6242,6 @@ image,i_t6_wpn_lmg_hamr_strap_c
 image,i_t6_wpn_lmg_hamr_strap_g
 image,i_t6_wpn_lmg_hamr_strap_n
 image,i_t6_wpn_lmg_hamr_strap_s
-image,i_t6_wpn_lmg_hamr_wall_chalk_c
 image,i_t6_wpn_lmg_lsat_ammo_c
 image,i_t6_wpn_lmg_lsat_ammo_g
 image,i_t6_wpn_lmg_lsat_ammo_n
@@ -6453,6 +6457,7 @@ image,i_t6_wpn_smg_pdw57_camo1_n
 image,i_t6_wpn_smg_pdw57_camo1_o
 image,i_t6_wpn_smg_pdw57_camo1_r
 image,i_t6_wpn_smg_pdw57_camo1_s
+image,i_t6_wpn_smg_pdw57_wall_chalk_c
 image,i_t6_wpn_smg_peacekeeper_camo1_c
 image,i_t6_wpn_smg_peacekeeper_camo1_g
 image,i_t6_wpn_smg_peacekeeper_camo1_n
@@ -6553,6 +6558,7 @@ image,i_t6_wpn_sniper_svu_scope_camo1_o
 image,i_t6_wpn_sniper_svu_scope_camo1_r
 image,i_t6_wpn_sniper_svu_scope_camo1_s
 image,i_t6_wpn_sniper_svu_scope_reticle_c
+image,i_t6_wpn_sniper_svu_wall_chalk_c
 image,i_t6_wpn_sniper_xpr50_camo2_c
 image,i_t6_wpn_sniper_xpr50_camo2_g
 image,i_t6_wpn_sniper_xpr50_camo2_n

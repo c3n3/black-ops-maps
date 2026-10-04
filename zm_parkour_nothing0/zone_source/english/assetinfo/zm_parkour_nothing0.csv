@@ -78,12 +78,12 @@ index,type,name,resident,streamed,parentStack
 77,xmodelmesh,c_zom_der_zombie_body1_g_larmoff_lod1e7fc2e63,524,266256,|c_zom_der_zombie_body1_g_larmoff|xmodel|zone_source/loc/zm_parkour_nothing0.zone|csv
 78,xmodelmesh,c_zom_der_zombie_body1_g_larmoff_lod05db5510e,608,464256,|c_zom_der_zombie_body1_g_larmoff|xmodel|zone_source/loc/zm_parkour_nothing0.zone|csv
 79,xmodel,c_zom_der_zombie_body1_g_larmoff,3060,0,|zone_source/loc/zm_parkour_nothing0.zone|csv
-80,localize,MULELICK_PERK_MULE_LICK_STRING,129,0,||assetlist
+80,localize,MULELICK_PERK_MULE_LICK_STRING,136,0,||assetlist
 81,localize,VODKA_PERK_VODKA_STRING,112,0,||assetlist
 82,localize,PARKOUR_HELP_FALLING,54,0,||assetlist
 83,localize,PARKOUR_HELP_END_SWITCH,44,0,||assetlist
 84,sound,zm_parkour_nothing0.en,54,0,||assetlist
-85,keyvaluepairs,en_zm_parkour_nothing0,6072,0,||assetlist
+85,keyvaluepairs,en_zm_parkour_nothing0,6073,0,||assetlist
 86,image,i_c_gen_gib_gore_arm_right_c,30,0,|mc/mtl_c_gen_gib_gore_arm_right_a|material|zone_source/loc/zm_parkour_nothing0.zone|csv
 87,image,i_c_gen_gib_gore_arm_right_g,30,0,|mc/mtl_c_gen_gib_gore_arm_right_a|material|zone_source/loc/zm_parkour_nothing0.zone|csv
 88,image,i_mtl_p7_gib_chunk_set_c,26,0,|mc/mtl_gib_chunk_set|material|p7_gib_chunk_bone_03|xmodel|zone_source/loc/zm_parkour_nothing0.zone|csv

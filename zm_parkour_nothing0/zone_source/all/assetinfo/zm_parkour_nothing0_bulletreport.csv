@@ -137,10 +137,10 @@ blood_wolf_model,12.19,1474,38.39,26.67,116.24,119015.27,1
 p7_zm_vending_packapunch,41.29,737,85.53,48.12,86.44,355755.25,1
 p7_zm_vending_packapunch_on,41.29,737,85.53,48.12,86.44,355755.25,1
 p7_cinder_block,4.99,148,16.16,6.23,8.01,807.17,25
-p7_zm_der_light_shade,8.29,146,24.20,24.20,11.00,6442.89,124
+p7_zm_der_light_shade,8.29,146,24.20,24.20,11.00,6442.89,144
 slurpentine_model_fluid,11.72,124,15.07,15.07,24.90,5655.18,1
 p7_zm_der_light_wall_mount,7.96,76,32.02,4.89,14.07,2201.56,2
-p7_zm_der2_light_hurricane_lamp,15.71,60,12.83,11.50,26.46,3905.17,123
+p7_zm_der2_light_hurricane_lamp,15.71,60,12.83,11.50,26.46,3905.17,143
 p7_fxp_debris_wood_splinter_03,0.39,52,1.00,6.09,1.13,6.85,1
 p7_fxp_debris_wood_splinter_02,0.15,48,0.78,3.73,0.88,2.55,1
 p7_zm_der_pswitch_handle,8.56,44,18.42,4.44,25.20,2060.67,1
@@ -154,7 +154,7 @@ p7_gib_chunk_bone_02,0.91,16,2.83,3.32,2.05,19.34,1
 p7_gib_chunk_meat_02,3.93,16,4.00,7.68,5.48,168.48,1
 p7_gib_chunk_flesh_03,1.63,16,3.89,1.82,4.60,32.62,1
 c_zom_zod_zombie_fem_body1_g_rlegspawn,8.35,16,11.92,8.81,4.88,512.85,1
-p7_debris_rockychunks_small_07,16.16,16,16.05,12.12,4.22,821.45,343
+p7_debris_rockychunks_small_07,16.16,16,16.05,12.12,4.22,821.45,403
 p7_gib_chunk_bone_03,1.07,16,2.66,4.52,3.11,37.40,1
 p7_gib_chunk_bone_01,0.66,16,1.93,2.13,4.84,19.91,1
 p7_gib_chunk_flesh_02,1.75,16,1.42,5.32,4.56,34.36,1

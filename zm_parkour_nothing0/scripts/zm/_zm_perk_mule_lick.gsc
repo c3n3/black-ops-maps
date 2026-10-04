@@ -28,7 +28,7 @@
 // with lives > 0 and Who's Who as a Who's Who down and burns the life, which broke solo Quick Revive.
 
 #define PERK_MULE_LICK						"specialty_nokillstreakreticle"
-#define MULE_LICK_COST						500
+#define MULE_LICK_COST						0
 #define MULE_LICK_ALIAS						"mule_lick"						// hud_t7.lua perk list key
 #define MULE_LICK_CLIENTFIELD				"hudItems.perks.mule_lick"
 #define MULE_LICK_BOTTLE_WEAPON				"zombie_perk_bottle_mulelick"
@@ -40,7 +40,7 @@
 #define MULE_LICK_JINGLE					"mus_perks_mulelick_jingle"
 #define MULE_LICK_STING						"mus_perks_mulelick_sting"
 #define MULE_LICK_SOLO_REVIVES				3		// stock's solo Quick Revive limit (level.solo_lives_given)
-#define MULE_LICK_BINDS						2		// perks kept for good after Mule Lick
+#define MULE_LICK_BINDS						4		// perks kept for good after Mule Lick (Vodka never counts)
 
 #precache( "string", "MULELICK_PERK_MULE_LICK_STRING" );
 #precache( "fx", MULE_LICK_FX_FILE );
@@ -188,7 +188,7 @@ function drop_extra_guns()
 	}
 }
 
-// The next MULE_LICK_BINDS perks gained after Mule Lick, by any means, are kept for good; once per game
+// The next MULE_LICK_BINDS perks gained after Mule Lick, by any means (Vodka doesn't count), are kept for good; once per game
 function mule_lick_bind_next_perk()
 {
 	self endon( "disconnect" );
@@ -208,7 +208,7 @@ function mule_lick_bind_next_perk()
 		self waittill( "perk_acquired" );
 		foreach ( perk in self.perks_active )
 		{
-			if ( self.mule_lick_bound.size < MULE_LICK_BINDS && perk != PERK_MULE_LICK && !IsInArray( before, perk ) && !IsInArray( self.mule_lick_bound, perk ) )
+			if ( self.mule_lick_bound.size < MULE_LICK_BINDS && perk != PERK_MULE_LICK && perk !== level.vodka_perk && !IsInArray( before, perk ) && !IsInArray( self.mule_lick_bound, perk ) )
 			{
 				self.mule_lick_bound[self.mule_lick_bound.size] = perk;
 				self._retain_perks_array[perk] = true;

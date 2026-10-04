@@ -241,9 +241,9 @@ function vodka_payout()
 
 // Payout by round: straight lines between these points (slow early, steeper late), rounded to $50, capped at 20000
 //   round  1:   750
-//   round 10:  4000   (~361 a round)
-//   round 18: 12000   (1000 a round)
-//   round 25: 20000   (~1143 a round), and 20000 from then on
+//   round 10:  3250   (~278 a round)
+//   round 18:  9750   (~813 a round; round 10 x3, as before)
+//   round 25: 20000   (~1464 a round), and 20000 from then on
 function vodka_round_value()
 {
 	round = level.round_number;
@@ -252,7 +252,7 @@ function vodka_round_value()
 		round = 1;
 	}
 	rounds = array( 1, 10, 18, 25 );
-	points = array( 750, 4000, 12000, 20000 );
+	points = array( 750, 3250, 9750, 20000 );
 
 	if ( round <= rounds[0] )
 	{

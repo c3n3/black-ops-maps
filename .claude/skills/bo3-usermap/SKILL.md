@@ -159,7 +159,7 @@ Tabs, Allman braces, `//` comments, spaces inside parens for calls.
 ## Later tweaks (Sept 29 night)
 - Vodka vignette radii are now {5: .40, 6: .34, 7: .29, 8: .25, 9: .21, 10: .18}: the final circle is 20% wider than 0.15, and the earlier steps were re-spaced so 9 → 10 still narrows. The image converter caches by content, so a radius that was used before won't "Convert" again.
 - The community pack's PERK_RETURN feature (`war_perk_return_spawn` in `_community_perk_collection.gsc`) hangs a "Hold [Use] to Remove Perk" unitrigger (`self.s_unitrigger`, ended by `kill_trigger`) on every `zombie_vending` trigger. `vodka_no_perk_return()` waits for it on Vodka's stock trigger, then notifies kill_trigger and calls `zm_unitrigger::unregister_unitrigger`.
-- Mule Lick now binds MULE_LICK_BINDS = 2 perks: `self.mule_lick_bound` is an array, and restore-on-spawn gives Mule Lick plus both bound perks. The hint says "Your next 2 perks are never lost."
+- Mule Lick now costs 0 and binds MULE_LICK_BINDS = 4 perks (Vodka never counts: `perk !== level.vodka_perk`; earlier it was 2): `self.mule_lick_bound` is an array, and restore-on-spawn gives Mule Lick plus both bound perks. The hint says "[Free] ... Your next 4 perks (not Vodka) are never lost."
 
 ## Design 15: help text, zone perk swaps
 - The start sign (6 world brushes: board, stand, blood decal, 3 red letter strokes at x 124..180, y -4..8), its 2 fx and the `safety_sign` struct are gone (`tools/stage15_once.py`, backup `.map.pre_design15.bak`).
@@ -199,4 +199,35 @@ Tabs, Allman braces, `//` comments, spaces inside parens for calls.
 - Powerup drop-off had two causes: stock multiplies zombie_powerup_drop_increment by 1.14 after every drop, and the per-round cap (zombie_powerup_drop_max_per_round = 4, level.powerup_drop_count) only resets in a real round start, which the endless rounds never do. `powerup_constant_rate()` makes the increment grow 8% per drop instead of 14% (it stores want/1.14; when stock's *1.14 shows up it does want *= 1.08), starting at 2000, and `endless_next_round()` resets powerup_drop_count.
 - Vodka payout = vodka_round_value() (round curve) x (1 - 0.08 x (GetPlayers().size - 1)), rounded to $50, in `vodka_payout()` (used by the hint and the purchase), then x (1 + 0.15 x drinks) in `vodka_player_payout()`.
 - Starting pistol: `level.start_weapon = GetWeapon( "t6_tac45" )` right after zm_usermap::main() (zm::init sets it to pistol_standard inside that call). The last-stand pistol is still stock (level.default_laststandpistol = pistol_standard, solo pistol_standard_upgraded).
-- Vodka round curve is now (1,750) (10,4000) (18,12000) (25,20000), capped at 20000.
+- Vodka round curve is now (1,750) (10,3250) (18,9750) (25,20000), capped at 20000.
+
+## Design 17: ranch entrances, Void walls (`tools/stage17_once.py`, backup `.map.pre_design17.bak`)
+- At the 10 zone doors (debris0-4, debris11-15; door centre y 777, 2009, 3241, 4473, 5705, 11865, 13097, 14329, 15561, 16793; the door octagon is centred yd-57; the Void's debris9/10 are excluded) there are now world brushes:
+  - gate columns at x ±80..104 (0..320) and a crossbeam (292..316) with a sign board
+  - slanted wall halves from x ±104 to ±382, 256 tall, 24 thick, leaning 15° north, built with `sheared()` via maplib.solid, decorated with cherry posts, a cap and an iron band
+  - two lamps on each wall top at x ±240 (copies of the octagon lamp: 8x8 post, p7_zm_der2_light_hurricane_lamp, shade, the same two spot lights named light_d17_N)
+  - fire fx (rubble 50x50 + flicker light) at x ±140, yd-40
+  - an octagon-wood floor strip (z -16..0) under each wall half, not in the doorway, so the jump over the gap is unchanged
+  - player clip "clip" above the doorway (z 292+), above the walls (z 120+) and closing the wall ends (x 382..422), up to z 1056
+- Void walls: the user's 4 (x ±256..800 at y 8960..8992; x 772..804 / -812..-780 at y ~7108..7664; wood 0..96, clip 96..288) plus a new back wall at y 9986..10018 (between octagon rows 12 and 13). Per corrections it is ONE centre wall, x -272..272 (the length of one old 544 segment), rebuilt by `tools/fix17_center_wall_once.py` (which removes any back-wall brushes inside y 9958..10046 first; stage17_once.py is importable now). Each has a cherry cap, an iron band, posts every ~136 and an octagon-wood floor strip under it.
+
+## Design 18 (`tools/stage18_once.py`, backup `.map.pre_design18.bak`)
+- Entrance fires are now iron bowls like the Void sign bowls: a 16x16 pedestal (0..32), a bowl floor (32..36) and a rim (36..50), with fire/fx_fire_barrel_30x30 at z 38 and light/fx_light_barrel_fire_factory_zmb_strong at z 60. They sit at x ±140, yd-40, each with a 44x44 "clip" box (0..128).
+- Void campfires: 67 now (10 added on free octagons more than 70 from every wall, 110 from props, never the entry/exit). Same build: void_campfire struct, 6 p7_debris_rockychunks_small_07 at r 30, 3 p7_plank_wood_broken_2x4x64 at scale 0.4. `void_campfires()` notifies "light_campfire" on a random 10% (rounded) at start.
+- Wall buys: the Void back HAMR (86.9997,10641) is now the SVU (t6_svu-as_wallbuy), the z5 Remington (-334,6624) is now the KAP-40, and the spawn wall buy (-191,-96,16) is now the M14. The lighthouse Remington is unchanged.
+- PaP powerup: on an already-upgraded gun that supports AAT it calls `aat::acquire(weapon)` (a new random AAT, never the current one) + max ammo. A first pack gives NO AAT (correction: the special ammo only comes with a re-pack). Needs `#using scripts\sharedat_shared`.
+
+## Design 19
+- The wall-buy progression before the Void is spawn (-191,-96,16) M14 → z3 (-334,4160) KAP-40 → z5 (-334,6624) PDW-57 (`tools/stage19_once.py`, backup `.map.pre_design19.bak`). These are the only 3 wall-buy slots before the Void. Lighthouse wall buys are unchanged (MP5, Remington, etc.).
+- `void_dogs()`: while any player is in z10p0/z10p5 and the endgame hasn't started (level endon "endgame_started", which the flag set notifies), one `spawn_one_dog(void zones)` every zombie_spawn_delay x 10. It skips while the "spawn_zombies" flag is cleared.
+
+## Design 20 perk swaps (`tools/stage20_once.py`, backup `.map.pre_perkswap20.bak`)
+- Zone perks now (x 336): z1 Muscle Milk, z2 Winter's Wail, z3 Speed Cola, z4 (336,5392) Double Tap [user-moved], z5 (320,6624) Windrunner [user], z11 Jugg, z12 Widow's Wine, z13 (324,14016) PhD Flopper [user], z14 Dying Wish, z15 Stamin-Up, z16 Mule Kick. Spawn: Quick Revive (192,-188; was the Verrückt Jug), Vodka (193,-67), Mule Lick (191,-17). The lighthouse Glitching Gin is now Magnet Mule.
+- Community perk engine slots: magnet specialty_loudenemies, muscle_milk specialty_fastmantle, winters_wail specialty_detectnearbyenemies, glitching_gin specialty_overcharge, verruckt_jug specialty_healthregen. To verify swaps in the .d3dbsp, count zm_perk_machine script_noteworthy values (the pack's model names don't follow one pattern, e.g. magnet_mule_model).
+- PowerShell 5 here has no `Get-Content -Raw`; use Python for file checks.
+
+## Design 21: spawn delay curve (after a correction)
+- The game starts at round 1 (the round-5 start was reverted). `endless_get_zombie_spawn_delay`: 2.25 s at round 1, x0.9384355 (= (0.1/2.25)^(1/49)) per round, down to stock's minimum 0.1 s at round 50, flat after that. The endgame /4 is floored at 0.05. The initial set_zombie_var spawn delay is 2.25. GSC has no float Pow (`math::pow` is integer exponents only), so use a multiply loop.
+- The HUD round counter (custom D3V HUD ZmRndContainer, driven by SetRoundsPlayed) is only set by stock when the first round starts, so before the entrance is bought it showed a stale number (round 6). `hud_round_at_start()` calls SetRoundsPlayed(level.round_number) at load and after initial_blackscreen_passed. Unconfirmed theory: stale from an earlier match in the same session.
+- The spawn Quick Revive is at (-128,-264.25,16), angles 0 90 0 (facing the deck centre). The user had moved it to (192.25,-264.25,16), on top of initial_spawn_points (192,-256), and got an instant game-over at start. The exact mirror (-192) would sit on the spawn point at (-192,-256). Keep perk machines more than 40 units from the 8 initial_spawn_points (x ±64/±192, y -256/-320).
+- The free stay-forever pap_powerup now sits at (0,8910,24), on the Void centre octagon south of (in front of) the pole-light switch (body (0,8972), handle on its south side). It used to be over z2's gap at (0,2629).
