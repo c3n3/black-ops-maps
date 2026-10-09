@@ -25,7 +25,6 @@ Play
 How the map starts
 ------------------
 - Round 1 does NOT start until someone clears the line of barrels at the north edge of the spawn deck (it's free).
-- There's a lever at spawn marked "GOD MODE (testing)" - it's a test tool for this playtest.
 - If you fall, shoot one of the green circles under the paths (from below) to get teleported back.
 - The red machine at spawn is Mule Lick, a custom perk ($500): you lose a gun slot, but the next perk you get is never lost, even if you go down.
 

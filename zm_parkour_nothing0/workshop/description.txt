@@ -1,0 +1,20 @@
+A challenge map. Make it to the lighthouse.
+
+[h2]New Perks[/h2]
+New perk VODKA. 'Nikolai cannot die!'
+
+[b]Mule Lick[/b]
+[list]
+[*]Free, but costs you one gun slot.
+[*]Your next 4 perks (not Vodka) are never lost, even if you go down or die.
+[/list]
+
+[h2]Credits[/h2]
+[list]
+[*]TheSkyeLord - BO2 weapons
+[*]L3akMod Team
+[*]Logical - DevRaw Dew (Thanks! I just re-skinned it) + T7 HUD
+[*]West (Westchief596) and HarryBo21 - Community Perk Collection
+[*]Saints PBR Skyboxes pack
+[*]Vertasea mystery boxes
+[/list]

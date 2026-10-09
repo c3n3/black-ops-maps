@@ -254,7 +254,7 @@ def build_sounds_strings_zone():
     (BO3 / "share" / "raw" / "english" / "localizedstrings" / "vodka_perk.str").write_text(
         'VERSION             "1"\r\nCONFIG              "C:\\projects\\cod\\t7\\bin\\StringEd.cfg"\r\nFILENOTES           ""\r\n\r\n'
         'REFERENCE           VODKA_STRING\r\n'
-        'LANG_ENGLISH     \t"Hold ^3[{+activate}]^7 for Vodka [^2+$&&1^7, +15% per Vodka drunk]\\n^7Drink up, comrade."\r\n\r\n'
+        'LANG_ENGLISH     \t"Hold ^3[{+activate}]^7 for Vodka [^2+$&&1^7, +15% per Vodka drunk, Reduces Pain]\\n^7Drink up, comrade."\r\n\r\n'
         'ENDMARKER\r\n', encoding="utf-8", newline="")
 
     (BO3 / "share" / "zone_source" / "vodka_perk.zpkg").write_text(

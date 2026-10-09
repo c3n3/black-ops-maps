@@ -19,11 +19,11 @@
 
 // VODKA (design 14)
 // Pays the player money per drink instead of costing any (scaled by round, see vodka_payout(), plus 15% per Vodka
-// already drunk, up to 10), and can be drunk again and again. Every drink up to 10 makes the player drunker: a pulsing
+// already drunk, up to 10), and can be bought 10 times per game (not per life). Every drink up to 10 makes the player drunker: a pulsing
 // blur and a swaying view, and from 5 drinks a darkness closing in from the edges until only a clear circle 15% of
 // the screen width in radius (18%) is left at 10. A player is cut off after 10. From the 3rd drink the Vodka jingle loops in
 // the drinker's head (only they hear it), louder with every drink up to 10.
-// Kept through downs, lost (with every drink) on a full death. Needs power. Free perks and the Wunderfizz never give it.
+// Kept through downs, lost on a full death; on respawn the player gets back half the level they died at (rounded up). Needs power. Free perks and the Wunderfizz never give it.
 // The stock machine trigger refuses a perk you already have, so it's disabled and Vodka uses its own trigger.
 // It borrows the engine perk "specialty_showenemyequipment" (an MP-only effect no zombies script uses).
 
@@ -71,7 +71,7 @@ function __init__()
 
 	level.vodka_perk = PERK_VODKA;	// the map script leaves it out of free perks and the Wunderfizz
 	zm_perks::register_perk_damage_override_func( &vodka_damage_override );	// damage reduction, see vodka_damage_override()
-	callback::on_spawned( &vodka_reset );
+	callback::on_spawned( &vodka_on_spawned );
 	level thread vodka_machine_trigger();
 }
 
@@ -129,7 +129,45 @@ function give_vodka()
 
 function take_vodka( b_pause, str_perk, str_result )
 {
+	if ( isdefined( self.vodka_level ) && self.vodka_level > 0 )
+	{
+		self.vodka_lost_level = self.vodka_level;	// given back (halved) on respawn
+	}
 	self vodka_reset();
+}
+
+// Every spawn starts sober; a respawn after a death gives back half the level the player died at, rounded up (10 -> 5,
+// 9 -> 5, 1 -> 1). Doesn't count as a purchase.
+function vodka_on_spawned()
+{
+	self endon( "disconnect" );
+
+	died_at = 0;
+	if ( isdefined( self.vodka_lost_level ) )
+	{
+		died_at = self.vodka_lost_level;
+	}
+	if ( isdefined( self.vodka_level ) && self.vodka_level > died_at )
+	{
+		died_at = self.vodka_level;	// the perk wasn't taken through take_vodka
+	}
+	self.vodka_lost_level = undefined;
+	self vodka_reset();
+
+	n = Int( ( Min( died_at, VODKA_MAX_LEVEL ) + 1 ) / 2 );
+	if ( n < 1 )
+	{
+		return;
+	}
+	wait 1;	// let the spawn finish
+	if ( self.sessionstate != "playing" || self HasPerk( PERK_VODKA ) )
+	{
+		return;
+	}
+	self zm_perks::give_perk( PERK_VODKA, false );	// give_vodka: level 1
+	self.vodka_level = n;
+	self vodka_update_vignette();
+	self vodka_update_jingle();
 }
 
 // A full death (or anything that really removes the perk) sobers the player up
@@ -213,7 +251,11 @@ function vodka_take_over()
 			continue;
 		}
 
-		if ( player HasPerk( PERK_VODKA ) && player.vodka_level >= VODKA_MAX_LEVEL )
+		if ( !isdefined( player.vodka_bought ) )
+		{
+			player.vodka_bought = 0;
+		}
+		if ( player.vodka_bought >= VODKA_MAX_LEVEL || ( player HasPerk( PERK_VODKA ) && player.vodka_level >= VODKA_MAX_LEVEL ) )
 		{
 			trig PlaySound( "evt_perk_deny" );
 			player IPrintLnBold( "You're cut off, comrade. No more Vodka." );
@@ -221,6 +263,7 @@ function vodka_take_over()
 			continue;
 		}
 
+		player.vodka_bought++;	// 10 per game, deaths don't reset it
 		PlaySoundAtPosition( "evt_bottle_dispense", trig.origin );
 		player PlaySoundToPlayer( "zmb_cha_ching", player );
 		player zm_score::add_to_player_score( vodka_player_payout( player ) );
@@ -239,11 +282,11 @@ function vodka_payout()
 	return Int( Floor( v / 50 + 0.5 ) ) * 50;
 }
 
-// Payout by round: straight lines between these points (slow early, steeper late), rounded to $50, capped at 20000
+// Payout by round: straight lines between these points, rounded to $50, capped at 15000
 //   round  1:   750
 //   round 10:  3250   (~278 a round)
 //   round 18:  9750   (~813 a round; round 10 x3, as before)
-//   round 25: 20000   (~1464 a round), and 20000 from then on
+//   round 25: 15000   (750 a round), and 15000 from then on
 function vodka_round_value()
 {
 	round = level.round_number;
@@ -252,7 +295,7 @@ function vodka_round_value()
 		round = 1;
 	}
 	rounds = array( 1, 10, 18, 25 );
-	points = array( 750, 3250, 9750, 20000 );
+	points = array( 750, 3250, 9750, 15000 );
 
 	if ( round <= rounds[0] )
 	{
@@ -270,8 +313,8 @@ function vodka_round_value()
 	return points[points.size - 1];
 }
 
-// Damage reduction by drinks, straight lines between: 1 drink 5%, 3 drinks 10%, 5 drinks 25%, 10 drinks 75%
-//   (2: 7.5%, 4: 17.5%, 6: 35%, 7: 45%, 8: 55%, 9: 65%)
+// Damage reduction by drinks, straight lines from 1 drink 5% to 5 drinks 35% (+7.5% per drink), then to 10 drinks
+// 80% (+9% per drink): 1: 5%, 2: 12.5%, 3: 20%, 4: 27.5%, 5: 35%, 6: 44%, 7: 53%, 8: 62%, 9: 71%, 10: 80%
 // It's a stock perk damage override: those chain (each gets the damage the previous ones left), so it stacks with
 // the other perks' reductions instead of replacing them. The map's own scripted downs/kills (MOD_UNKNOWN, e.g. the
 // bottom-of-the-sky down) and suicide / hurt volumes are left alone.
@@ -291,22 +334,12 @@ function vodka_damage_override( eInflictor, eAttacker, iDamage, iDFlags, sMeansO
 
 function vodka_damage_reduction( drinks )
 {
-	levels = array( 1, 3, 5, 10 );
-	reduction = array( 0.05, 0.10, 0.25, 0.75 );
-
-	if ( drinks <= levels[0] )
+	d = Min( Max( drinks, 1 ), VODKA_MAX_LEVEL );
+	if ( d <= 5 )
 	{
-		return reduction[0];
+		return 0.05 + ( d - 1 ) * ( 0.35 - 0.05 ) / 4;
 	}
-	for ( i = 1; i < levels.size; i++ )
-	{
-		if ( drinks <= levels[i] )
-		{
-			f = Float( drinks - levels[i - 1] ) / Float( levels[i] - levels[i - 1] );
-			return reduction[i - 1] + f * ( reduction[i] - reduction[i - 1] );
-		}
-	}
-	return reduction[reduction.size - 1];
+	return 0.35 + ( d - 5 ) * ( 0.80 - 0.35 ) / ( VODKA_MAX_LEVEL - 5 );
 }
 
 // The round's payout plus 15% for every Vodka this player has already drunk (counted up to 10: at most x2.5)
@@ -440,8 +473,8 @@ function vodka_drunk_effect()
 	self.vodka_drunk = true;
 
 	// per level 1..10: blur peak, sway yaw (degrees), sway speed (cycles per second)
-	// levels 1-5 are the first version's blur and sway x1.15; 6-10 keep climbing
-	blur = array( 0.58, 1.27, 2.07, 3.22, 5.18, 6.1, 7.0, 7.9, 8.8, 9.8 );
+	// levels 1-5 are the first version's blur and sway x1.15; 6-10 keep climbing; blur then x1.1 across the board
+	blur = array( 0.64, 1.4, 2.28, 3.54, 5.7, 6.71, 7.7, 8.69, 9.68, 10.78 );
 	yaw = array( 0.92, 1.84, 2.99, 4.6, 8.63, 10.5, 12.5, 14.5, 16.8, 19.5 );
 	speed = array( 0.25, 0.3, 0.36, 0.42, 0.55, 0.61, 0.67, 0.74, 0.82, 0.9 );
 

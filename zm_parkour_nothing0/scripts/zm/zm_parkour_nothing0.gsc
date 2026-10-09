@@ -29,6 +29,7 @@
 #using scripts\zm\_zm_ai_dogs;
 #using scripts\zm\_zm_perks;
 #using scripts\shared\spawner_shared;
+#using scripts\shared\ai_shared;
 #using scripts\zm\_zm_utility;
 #using scripts\zm\_zm_weapons;
 #using scripts\zm\_zm_zonemgr;
@@ -67,6 +68,10 @@
 
 #using scripts\zm\zm_usermap;
 
+// Release: the testing loadout switch is off and its models are removed from the map (map_source backup
+// zm_parkour_nothing0.map.pre_release.bak). For a test build set this to 1 AND put the switch models back.
+#define TESTING_SWITCH 0
+
 #precache( "string", "PARKOUR_HELP_FALLING" );
 #precache( "triggerstring", "ZOMBIE_WEAPONCOSTONLYFILL" );
 #precache( "triggerstring", "ZOMBIE_WEAPONCOSTONLYFILL_BGB_SECRET_SHOPPER" );
@@ -102,8 +107,8 @@ function setup_pap_powerup()
 	self NotSolid();	// the machine model has collision; players have to walk into the powerup to grab it
 }
 
-// Pack-a-Punches whatever the collector is holding (no special ammo type). Already Pack-a-Punched: re-packs it, i.e. a
-// new random special ammo type (never the one it has), and refills it.
+// Pack-a-Punches whatever the collector is holding (no special ammo type) and refills it. Already Pack-a-Punched:
+// re-packs it, i.e. a new random special ammo type (never the one it has), with no ammo refill.
 function grab_pap_powerup( player )
 {
 	weapon = player GetCurrentWeapon();
@@ -112,7 +117,6 @@ function grab_pap_powerup( player )
 		if ( zm_weapons::weapon_supports_aat( weapon ) )
 		{
 			player aat::acquire( weapon );
-			player GiveMaxAmmo( weapon );
 		}
 		return;
 	}
@@ -150,7 +154,11 @@ function main()
 	level thread wallbuys_before_first_round();
 	level thread hud_round_at_start();
 	level thread powerup_constant_rate();
-	level thread void_dogs();	// a player in the Void (before the endgame): dogs at 1/10 the zombie spawn rate
+	level thread void_dogs();
+	zm_perks::register_perk_damage_override_func( &endgame_dog_damage );	// dogs hit at 40% in the endgame
+	spawner::add_archetype_spawn_function( "zombie_dog", &dog_always_sprint );
+	level thread void_spawn_boost();
+	level thread max_ammo_half_after_void();	// opening the Void halves Max Ammo drops for the rest of the game	// a player in the Void (before the endgame): zombies spawn 15% faster	// a player in the Void (before the endgame): dogs at 1/10 the zombie spawn rate
 
 	// Powerups from zombies killed on monster clip (the AI floors over the gaps) stay where the zombie died
 	zm_spawner::register_zombie_death_event_callback( &remember_death_spot );
@@ -175,7 +183,7 @@ function main()
 
 	level.pathdist_type = PATHDIST_ORIGINAL;
 
-	zombie_utility::set_zombie_var( "zombie_spawn_delay", 2.25, true );
+	zombie_utility::set_zombie_var( "zombie_spawn_delay", 1.9, true );
 	zombie_utility::set_zombie_var( "zombie_between_round_time", 10 );
 	level.round_prestart_func = &wait_for_map_entrance;	// round 1 starts when the $0 spawn debris is bought
 	level.func_get_zombie_spawn_delay = &endless_get_zombie_spawn_delay;
@@ -217,8 +225,9 @@ function main()
 		level.zombie_powerup_array = array::randomize( level.zombie_powerup_array );
 	}
 
-	// Pack-a-Punch powerup: one more entry in the drop cycle = 2x as likely; Double Points and Insta-Kill: two more = 3x
-	foreach ( name in array( "pap_powerup", "double_points", "double_points", "insta_kill", "insta_kill" ) )
+	// Double Points and Insta-Kill: two more entries in the drop cycle = 3x as likely (the Pack-a-Punch powerup has just
+	// its own one); Insta-Kill then only drops half the times it comes up = 1.5x
+	foreach ( name in array( "double_points", "double_points", "insta_kill", "insta_kill" ) )
 	{
 		if ( IsInArray( level.zombie_powerup_array, name ) )
 		{
@@ -226,17 +235,27 @@ function main()
 		}
 	}
 	level.zombie_powerup_array = array::randomize( level.zombie_powerup_array );
+	if ( isdefined( level.zombie_powerups["insta_kill"] ) )
+	{
+		level.zombie_powerups["insta_kill"].func_should_drop_with_regular_powerups = &insta_kill_half_chance;
+	}
 
 	level._effect["ambient_light"] = "ambient_light";
 	level thread ambient_light_switch();
 
-	level thread godmode_switch();	// TESTING ONLY
+	if ( TESTING_SWITCH )
+	{
+		level thread godmode_switch();	// TESTING ONLY: the testing loadout switch at spawn
+	}
 
 	level flag::init( "endgame_started" );
 	level._effect["endgame_arrow_light"] = "endgame_arrow_light";
 	level thread endgame_exit();
 	level thread endgame_path();		// glowing red path lighthouse -> spawn, endgame only
 	level thread endgame_zombie_recall();	// endgame: zombies left behind every player come back at spawn
+	level.fn_custom_round_ai_spawn = &custom_round_spawn;
+	level.zm_custom_spawn_location_selection = &zombie_spawn_location;	// final stretch / recalls: rise at spawn	// zombies per spawn tick (final stretch / Void)
+	level thread endgame_spawn_at_start_watch();	// endgame: once someone leaves the Void toward spawn, zombies spawn at spawn
 	zm::register_player_damage_callback( &endgame_exit_no_fall_damage );
 
 	level flag::init( "lighthouse_reached" );
@@ -434,7 +453,8 @@ function safety_bottom_watch()
 	while ( 1 )
 	{
 		wait 0.1;
-		if ( self.origin[2] < -2500 && IsAlive( self ) && self.sessionstate == "playing" && !self laststand::player_is_in_laststand() )
+		if ( self.origin[2] < -2500 && IsAlive( self ) && self.sessionstate == "playing" && !self laststand::player_is_in_laststand()
+			&& !self over_endgame_exit_platform() )	// the endgame drop to the exit platform goes below -2500
 		{
 			self DoDamage( self.health + 1000, self.origin, undefined, undefined, "none", "MOD_UNKNOWN" );
 			wait 1;
@@ -757,11 +777,12 @@ function start_endgame( player )
 	// Every enabled zone counts as occupied, so all of them are active for spawning
 	level.zone_occupied_func = &endgame_zone_occupied;
 
-	// 6x the stock spawn limits
-	level.zombie_ai_limit = 24 * 6;
-	level.zombie_actor_limit = 31 * 6;
+	// No script cap on AI in the endgame: the engine's actor limit (zombie_utility::spawn_zombie waits on
+	// GetFreeActorCount) is the only one
+	level.zombie_ai_limit = 999;
+	level.zombie_actor_limit = 999;
 
-	level thread endgame_dogs();	// 100-dog wave with zombie spawns paused, then dogs at 1/3 the zombie rate
+	level thread endgame_dogs();	// 2000-dog wave (until the final stretch) with zombie spawns paused, then dogs at 1/3 the zombie rate
 }
 
 // Endgame: the odd dog mixed into the horde, from the dog locations of every (now active) zone
@@ -769,23 +790,35 @@ function endgame_dogs()
 {
 	zones = array( "z10p0", "z10p5", "z11", "z12", "z13", "z14", "z15", "z16" );
 
-	// Zombie spawning paused (stock "spawn_zombies" flag) while 100 dogs come in at the zombie spawn rate
+	// Zombie spawning paused (stock "spawn_zombies" flag) while 2000 dogs come in at the zombie spawn rate,
+	// 1 / 2 / 3 / 4 dogs per tick with 1 / 2 / 3 / 4 players
 	level flag::clear( "spawn_zombies" );
 	spawned = 0;
-	while ( spawned < 100 )
+	while ( spawned < 2000 && !IS_TRUE( level.final_stretch ) )	// the final stretch ends the dog wave early
 	{
-		if ( spawn_one_dog( zones ) )
+		per_tick = Int( max( 1, min( 4, GetPlayers().size ) ) );
+		for ( i = 0; i < per_tick && spawned < 2000 && !IS_TRUE( level.final_stretch ); i++ )
 		{
-			spawned++;
+			if ( spawn_one_dog( zones ) )
+			{
+				spawned++;
+			}
 		}
 		wait level.zombie_vars["zombie_spawn_delay"];
 	}
 	level flag::set( "spawn_zombies" );
 
-	// Afterwards: dogs keep coming at a third of the zombie spawn rate
+	// Afterwards: dogs keep coming at a third of the zombie spawn rate, 1/15 in the final stretch
 	while ( 1 )
 	{
-		wait level.zombie_vars["zombie_spawn_delay"] * 3;
+		if ( IS_TRUE( level.final_stretch ) )
+		{
+			wait level.zombie_vars["zombie_spawn_delay"] * 15;
+		}
+		else
+		{
+			wait level.zombie_vars["zombie_spawn_delay"] * 3;
+		}
 		spawn_one_dog( zones );
 	}
 }
@@ -957,7 +990,7 @@ function godmode_switch()
 
 	level flag::wait_till( "initial_blackscreen_passed" );
 
-	trig = make_use_trigger( handle.origin - ( 0, 24, 45 ), 40, 80, "Hold ^3[{+activate}]^7 for GOD MODE (testing)" );
+	trig = make_use_trigger( handle.origin - ( 0, 24, 45 ), 40, 80, "Hold ^3[{+activate}]^7 for the TESTING loadout" );
 	while ( 1 )
 	{
 		trig waittill( "trigger", player );
@@ -969,16 +1002,47 @@ function godmode_switch()
 	}
 }
 
+// Testing loadout (no invulnerability): jumps to round 20, opens every door, teleports to the lighthouse, $500,000, every perk with a machine on the map except Vodka and
+// Mule Lick (its -1 gun slot would drop a gun; Mule Kick goes first so the third gun fits), and three Pack-a-Punched
+// guns: Dragunov, LSAT, Thundergun
 function godmode_give()
 {
 	self endon( "disconnect" );
 
-	self EnableInvulnerability();
 	self zm_score::add_to_player_score( 500000 );
 	set_round( 20 );
 
-	// Mule Kick (first, so the third gun fits), Speed Cola, Double Tap and Stamin-Up only
-	foreach ( perk in array( "specialty_additionalprimaryweapon", "specialty_fastreload", "specialty_doubletap2", "specialty_staminup" ) )
+	// Open every door for free (as the endgame does) so the lighthouse zone is enabled; teleporting into a zone that
+	// isn't enabled yet counts as out of the playable area and kills the player
+	foreach ( trig in GetEntArray( "zombie_debris", "targetname" ) )
+	{
+		trig notify( "trigger", self, true );
+	}
+	for ( i = 0; i < 60 && !zm_zonemgr::zone_is_enabled( "lighthouse" ); i++ )
+	{
+		wait 0.05;
+	}
+
+	// to the lighthouse (its safety-teleport spot)
+	dest = level.safety_dests["lighthouse"];
+	if ( isdefined( dest ) )
+	{
+		self SetOrigin( dest.origin );
+		if ( isdefined( dest.angles ) )
+		{
+			self SetPlayerAngles( dest.angles );
+		}
+	}
+
+	perks = array( "specialty_additionalprimaryweapon" );
+	foreach ( perk in map_perks() )
+	{
+		if ( perk !== level.mule_lick_perk && !IsInArray( perks, perk ) )
+		{
+			perks[perks.size] = perk;
+		}
+	}
+	foreach ( perk in perks )
 	{
 		if ( !self HasPerk( perk ) && isdefined( level._custom_perks[perk] ) )
 		{
@@ -991,7 +1055,7 @@ function godmode_give()
 	{
 		self TakeWeapon( weapon );
 	}
-	foreach ( name in array( "t6_scarh_up", "t6_lsat_up", "thundergun_upgraded" ) )
+	foreach ( name in array( "t6_dragunov_up", "t6_lsat_up", "thundergun_upgraded" ) )
 	{
 		weapon = GetWeapon( name );
 		self zm_weapons::weapon_give( weapon, true, false, true, true );
@@ -1025,18 +1089,37 @@ function endgame_exit_no_fall_damage( eInflictor, eAttacker, iDamage, iDFlags, s
 
 	b = level.endgame_exit_bounds;
 	o = self.origin;
-	if ( o[0] >= b[0] && o[0] <= b[1] && o[1] >= b[2] && o[1] <= b[3] && Abs( o[2] - level.endgame_exit_z ) < 64 )
+	if ( o[0] >= b[0] - 32 && o[0] <= b[1] + 32 && o[1] >= b[2] - 32 && o[1] <= b[3] + 32 && Abs( o[2] - level.endgame_exit_z ) < 64 )
 	{
 		return 0;
 	}
 	return -1;
 }
 
+// During the endgame: in the column of air over the exit platform (its x/y bounds + 64, anywhere above its top), so
+// the long drop down to it isn't treated as falling off the map
+function over_endgame_exit_platform()
+{
+	if ( !level flag::get( "endgame_started" ) || !isdefined( level.endgame_exit_bounds ) )
+	{
+		return false;
+	}
+	b = level.endgame_exit_bounds;
+	o = self.origin;
+	return o[0] >= b[0] - 64 && o[0] <= b[1] + 64 && o[1] >= b[2] - 64 && o[1] <= b[3] + 64 && o[2] > level.endgame_exit_z - 64;
+}
+
 function endgame_zone_occupied( zone_name )
 {
 	if ( zm_zonemgr::any_player_in_zone( zone_name ) )
 	{
-		return true;
+		return true;	// a zone with a player in it is always active (its wall buys / box keep working)
+	}
+	// Final stretch: only the final stretch zones (start_zone, z1-z3) are kept active, set by hand. Stock cleanup
+	// deletes zombies outside active zones, which had been removing every zombie that rose in z2/z3.
+	if ( IS_TRUE( level.final_stretch ) )
+	{
+		return IsInArray( final_stretch_zones(), zone_name );
 	}
 	return zone_order( zone_name ) < endgame_front();
 }
@@ -1096,7 +1179,12 @@ function endgame_zombie_recall()
 			{
 				continue;	// dogs, and zombies still rising
 			}
-			if ( zone_order( zombie_zone( zombie ) ) > rear )
+			zone = zombie_zone( zombie );
+			if ( IS_TRUE( level.final_stretch ) && isdefined( zone ) && IsInArray( final_stretch_zones(), zone ) )
+			{
+				continue;	// the final stretch spawns there on purpose
+			}
+			if ( zone_order( zone ) > rear )
 			{
 				zombie thread recall_zombie_to_spawn();
 			}
@@ -1168,8 +1256,195 @@ function recall_zombie_to_spawn()
 	}
 
 	level.zombie_total_subtract++;	// endless_new_spawn_count() treats this spawn as a requeue, not a new zombie
+	if ( !isdefined( level.pending_start_spawns ) )
+	{
+		level.pending_start_spawns = 0;
+	}
+	level.pending_start_spawns++;	// zombie_spawn_location puts the next spawn at a start_zone spot
 	spawner = array::random( level.zombie_spawners );
 	zombie_utility::spawn_zombie( spawner, spawner.targetname, array::random( spots ) );
+}
+
+// Endgame: as soon as the first living player has left the Void heading to spawn (they're in z5 or any zone before it),
+// every zombie spawns at start_zone's spawn spots instead of the active zones', and everyone sees a red "Final Stretch,
+// good luck". Dogs keep their own logic.
+function endgame_spawn_at_start_watch()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+	level flag::wait_till( "endgame_started" );
+	limit = zone_order( "z10p0" );
+
+	while ( 1 )
+	{
+		foreach ( player in GetPlayers() )
+		{
+			if ( player.sessionstate != "playing" )
+			{
+				continue;
+			}
+			zone = player zm_zonemgr::get_player_zone();
+			if ( isdefined( zone ) && zone_order( zone ) >= 0 && zone_order( zone ) < limit )
+			{
+				level thread instant_nuke( player );	// clean slate: every zombie dies the moment it starts
+				spawner::add_archetype_spawn_function( "zombie", &final_stretch_no_cleanup );	// stock cleanup off
+				spawner::add_archetype_spawn_function( "zombie_dog", &final_stretch_no_cleanup );
+				level thread final_stretch_dogs();	// dogs from the z2 final stretch spots, at the zombie rate
+				level.final_stretch = true;	// custom_round_spawn: 7 per tick; zombie_spawn_location: final stretch zones
+				foreach ( p in GetPlayers() )
+				{
+					p IPrintLnBold( "^1Final Stretch, good luck" );
+				}
+				return;
+			}
+		}
+		wait 0.5;
+	}
+}
+
+// Stock's spawn-location hook (level.zm_custom_spawn_location_selection): do_zombie_spawn calls it for every zombie
+// spawned WITHOUT a spot (a spot passed to zombie_utility::spawn_zombie is applied first and wins). Final stretch: only the spots in final_stretch_zones() (start_zone, z1). Queued recalls (level.pending_start_spawns): only
+// start_zone's.
+function zombie_spawn_location( spots )
+{
+	if ( IS_TRUE( level.final_stretch ) || IS_TRUE( level.pending_start_spawns ) )
+	{
+		zones = array( "start_zone" );
+		if ( IS_TRUE( level.final_stretch ) )
+		{
+			zones = final_stretch_zones();
+		}
+		// a zone first (every zone an equal share, however many spots it has), then a spot in it
+		zones = array::randomize( zones );
+		foreach ( zone in zones )
+		{
+			start = [];
+			foreach ( spot in level.zones[zone].a_loc_types["zombie_location"] )
+			{
+				if ( IS_TRUE( spot.is_enabled ) )
+				{
+					start[start.size] = spot;
+				}
+			}
+			if ( start.size )
+			{
+				if ( IS_TRUE( level.pending_start_spawns ) && !IS_TRUE( level.final_stretch ) )
+				{
+					level.pending_start_spawns--;
+				}
+				return array::random( start );
+			}
+		}
+	}
+	return array::random( spots );
+}
+
+function final_stretch_zones()
+{
+	return array( "start_zone", "z1" );
+}
+
+// Final stretch: stock's zombie cleanup (zm_giant_cleanup_mgr, which deletes and requeues zombies far from players
+// outside active zones) skips every zombie flagged b_ignore_cleanup
+function final_stretch_no_cleanup()
+{
+	if ( IS_TRUE( level.final_stretch ) )
+	{
+		self.b_ignore_cleanup = true;
+	}
+}
+
+// Final stretch: a dog from one of the 10 final_stretch_dog_spot structs in z2 (not part of any zone's spawners, so
+// unused until now) every zombie spawn delay -- the same rate as the zombies -- while there's room under the AI cap
+function final_stretch_dogs()
+{
+	level endon( "end_game" );
+	spots = struct::get_array( "final_stretch_dog_spot", "targetname" );
+	if ( !spots.size )
+	{
+		return;
+	}
+	while ( 1 )
+	{
+		wait level.zombie_vars["zombie_spawn_delay"];
+		if ( zombie_utility::get_current_zombie_count() < level.zombie_ai_limit )
+		{
+			spawn_dog_at( array::random( spots ) );
+		}
+	}
+}
+
+// Stock round_spawning's custom spawn hook (level.fn_custom_round_ai_spawn), deciding zombies per spawn tick:
+//   final stretch:              7, in the final stretch zones (start_zone, z1)
+//   any player in the Void:     2, at the usual spots (outside the final stretch)
+//   otherwise:                  false -> stock spawns its usual 1
+// Returning true tells stock the spawn was handled, and stock then skips its own delay, so it's waited here.
+function custom_round_spawn()
+{
+	if ( IS_TRUE( level.final_stretch ) )
+	{
+		return endgame_spawn_at_start();
+	}
+	if ( players_in_void() > 0 )
+	{
+		spawn_zombies_this_tick( 2, undefined );
+		return true;
+	}
+	return false;
+}
+
+// Up to n zombies (each at a random spot from spots, or wherever stock would put them if undefined), stopping early at
+// the alive / actor caps or when the queue is empty; same bookkeeping and delay as stock round_spawning
+function spawn_zombies_this_tick( n, spots )
+{
+	for ( i = 0; i < n; i++ )
+	{
+		if ( level.zombie_total <= 0 || zombie_utility::get_current_zombie_count() >= level.zombie_ai_limit
+			|| zombie_utility::get_current_actor_count() >= level.zombie_actor_limit )
+		{
+			break;
+		}
+		spawner = array::random( level.zombie_spawners );
+		if ( isdefined( spots ) )
+		{
+			ai = zombie_utility::spawn_zombie( spawner, spawner.targetname, spots[i % spots.size] );
+		}
+		else
+		{
+			ai = zombie_utility::spawn_zombie( spawner, spawner.targetname );
+		}
+		if ( isdefined( ai ) )
+		{
+			level.zombie_total--;
+			if ( level.zombie_respawns > 0 )
+			{
+				level.zombie_respawns--;
+			}
+			ai thread zombie_utility::round_spawn_failsafe();
+		}
+		util::wait_network_frame();
+	}
+	if ( level.zombie_respawns > 0 )
+	{
+		wait 0.1;	// stock gets cleaned-up zombies back in quicker
+	}
+	else
+	{
+		wait level.zombie_vars["zombie_spawn_delay"];
+	}
+}
+
+// Final stretch: 7 per tick (zombie_spawn_location puts them in the final stretch zones), so the horde maxes out quickly
+function endgame_spawn_at_start()
+{
+	if ( !isdefined( level.zombie_spawners ) || !level.zombie_spawners.size )
+	{
+		return false;	// fall back to stock spawning
+	}
+
+	// No spot passed: a spot given to spawn_zombie wins over the location hook (its move_spawn_func runs first), so
+	// zombie_spawn_location picks one, an equal share for each final stretch zone
+	spawn_zombies_this_tick( 7, undefined );
+	return true;
 }
 
 // Instant nuke: flash, every zombie dies at once, 400 points each, and spawning isn't held back afterwards
@@ -1268,7 +1543,7 @@ function wait_for_map_entrance()
 function perk_bottles()
 {
 	level flag::wait_till( "initial_blackscreen_passed" );
-	foreach ( spot in array( ( -1001, 7152, 0 ), ( 1001, 7152, 0 ), ( 130, 19518, 512 ) ) )
+	foreach ( spot in array( ( 130, 19518, 512 ) ) )	// the top of the lighthouse (the Void's two were removed)
 	{
 		level thread zm_powerups::specific_powerup_drop( "free_perk", spot, undefined, undefined, undefined, undefined, true );
 	}
@@ -1378,6 +1653,23 @@ function endless_spawning()
 	}
 }
 
+// Endgame: dogs deal 40% damage (x0.4). A perk damage override, so it chains with the others (Vodka's reduction etc.)
+function endgame_dog_damage( eInflictor, eAttacker, iDamage, iDFlags, sMeansOfDeath, weapon, vPoint, vDir, sHitLoc, psOffsetTime )
+{
+	if ( !IS_TRUE( level.endgame_active ) || !isdefined( eAttacker ) || eAttacker.archetype !== "zombie_dog" || iDamage <= 0 )
+	{
+		return undefined;
+	}
+	return Int( Max( iDamage * 0.4 + 0.5, 1 ) );
+}
+
+// Every dog sprints at its target from the moment it spawns, even without sight of it (stock: a dog walks and
+// sniffs around until it has seen its enemy or is within scr_dog_run_distance)
+function dog_always_sprint()
+{
+	self ai::set_behavior_attribute( "sprint", true );
+}
+
 // Advances the round in place once 1.5x the stock round size worth of new zombies has spawned
 function endless_round_advance()
 {
@@ -1435,6 +1727,12 @@ function endless_next_round()
 	{
 		level thread zm::award_grenades_for_survivors();
 	}
+
+	// Dead players come back every round (stock does this between rounds, which never end here)
+	foreach ( player in GetPlayers() )
+	{
+		player zm::spectator_respawn_player();
+	}
 }
 
 // Uses the current round (stock uses the round that just ended)
@@ -1451,25 +1749,28 @@ function endless_update_move_speed()
 }
 
 // Stock spawn delay decay, but always from a 2.0 base regardless of player count
-// Spawn delay by round: 2.25 s at round 1, shrinking by the same factor every round to stock's minimum 0.1 s at
-// round 50 ((0.1 / 2.25) ^ (1/49) ~ 0.9384 a round, ~6% faster each round), 0.1 s after that. The endgame still
+// Spawn delay by round: 1.9 s at round 1, shrinking by the same factor every round to stock's minimum 0.1 s at
+// round 50 ((0.1 / 1.9) ^ (1/49) ~ 0.9417 a round, ~6% faster each round), 0.1 s after that. The endgame still
 // divides by 4 (never below one server frame).
 function endless_get_zombie_spawn_delay( n_round )
 {
 	n = Int( Min( Max( n_round, 1 ), 50 ) ) - 1;
-	n_delay = 2.25;
+	n_delay = 1.9;
 	for ( i = 0; i < n; i++ )
 	{
-		n_delay *= 0.9384355;
+		n_delay *= 0.9416792;
 	}
 	n_delay = Max( n_delay, 0.1 );
 
+	// Faster with more players: divided by ( players x 0.75 + 0.25 ) -- 1 player x1, 2 players x1.75, 3 x2.5, 4 x3.25
+	n_delay /= Max( GetPlayers().size, 1 ) * 0.75 + 0.25;
+
 	if ( IS_TRUE( level.endgame_active ) )
 	{
-		n_delay = Max( n_delay / 4, 0.05 );
+		n_delay /= 4;
 	}
 
-	return n_delay;
+	return Max( n_delay, 0.05 );
 }
 
 function usermap_test_zone_init()
@@ -1548,6 +1849,11 @@ function remember_death_spot( attacker )
 
 function powerup_drop_at_death_spot( drop_point )
 {
+	if ( level flag::get( "endgame_started" ) )
+	{
+		return true;	// no powerups drop in the endgame
+	}
+
 	if ( !isdefined( level.recent_death_spots ) )
 	{
 		return false;
@@ -1585,6 +1891,71 @@ function powerup_constant_rate()
 			level.zombie_vars["zombie_powerup_drop_increment"] = want / 1.14;
 		}
 	}
+}
+
+// Keeps zombie_spawn_delay current, twice a second: the round curve (which includes the player count and the
+// endgame), and while any player is in the Void before the endgame, faster still by how many are IN the Void: +15% with
+// 1 up to +40% with 4 in even steps (1: 15%, 2: 23.3%, 3: 31.7%, 4: 40%). Never below one server frame.
+function void_spawn_boost()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+
+	while ( 1 )
+	{
+		wait 0.5;
+		delay = [[ level.func_get_zombie_spawn_delay ]]( zm::get_round_number() );
+		n = players_in_void();
+		if ( n > 0 && !level flag::get( "endgame_started" ) )
+		{
+			boost = 0.15 + ( Min( n, 4 ) - 1 ) * ( 0.25 / 3 );
+			delay = Max( delay / ( 1 + boost ), 0.05 );
+		}
+		if ( level.zombie_vars["zombie_spawn_delay"] != delay )
+		{
+			level.zombie_vars["zombie_spawn_delay"] = delay;
+		}
+	}
+}
+
+// Once the Void door opens (enter_z10), Max Ammo drops half as often for the rest of the game: when the drop cycle
+// lands on it, it's skipped half the time (stock then takes the next powerup in the cycle)
+function max_ammo_half_after_void()
+{
+	level flag::wait_till( "initial_blackscreen_passed" );
+	level flag::wait_till( "enter_z10" );
+	if ( isdefined( level.zombie_powerups["full_ammo"] ) )
+	{
+		level.zombie_powerups["full_ammo"].func_should_drop_with_regular_powerups = &max_ammo_half_chance;
+	}
+}
+
+function max_ammo_half_chance()
+{
+	return RandomInt( 2 ) == 0;
+}
+
+// Insta-Kill drops half the times the drop cycle comes to it
+function insta_kill_half_chance()
+{
+	return RandomInt( 2 ) == 0;
+}
+
+// Players in the Void (z10p0 / z10p5), each counted once; spectators never count
+function players_in_void()
+{
+	n = 0;
+	foreach ( player in GetPlayers() )
+	{
+		foreach ( zone in array( "z10p0", "z10p5" ) )
+		{
+			if ( player zm_zonemgr::entity_in_zone( zone, true ) )
+			{
+				n++;
+				break;
+			}
+		}
+	}
+	return n;
 }
 
 // While any player is in the Void (z10p0 / z10p5) and the endgame hasn't started, a dog comes from the Void's dog

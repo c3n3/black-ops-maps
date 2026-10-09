@@ -43,7 +43,7 @@ if ((Test-Path $bsp) -and (Test-Path $led) -and ((Get-Item $led).LastWriteTime -
 }
 $gsc = Get-Content (Join-Path $MapDir "scripts\zm\$Map.gsc") -Raw
 if ($gsc -match "level thread godmode_switch\(\);") {
-    Write-Warning "The TESTING ONLY godmode switch is still enabled (spawn deck). Fine for a playtest; remove before publishing."
+    Write-Warning "The TESTING ONLY loadout switch is still enabled (spawn deck). Fine for a playtest; remove before publishing."
 }
 
 # ---- zip: <Map>\zone\... so it extracts straight into the usermaps folder ----
